@@ -1,29 +1,29 @@
-package utils
+package config
 
 import (
 	"encoding/json"
 	"os"
-	"reflect"
 
+	"github.com/avvo-na/devil-guard/validator"
 	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
-	OwnerID             string `json:"owner_id"`
-	DiscordClientID     string `json:"discord_client_id"`
-	DiscordClientSecret string `json:"discord_client_secret"`
-	DiscordBotToken     string `json:"discord_bot_token"`
-	LogLevel            string `json:"log_level"`
-	Environment         string `json:"environment"`
+	OwnerID             string `json:"owner_id" validate:"required"`
+	DiscordClientID     string `json:"discord_client_id" validate:"required"`
+	DiscordClientSecret string `json:"discord_client_secret" validate:"required"`
+	DiscordBotToken     string `json:"discord_bot_token" validate:"required"`
+	LogLevel            string `json:"log_level" validate:"required"`
+	Environment         string `json:"environment" validate:"required"`
 }
 
 var (
 	ConfigData    Config
 	DefaultConfig Config = Config{
-		OwnerID:             "0",
-		DiscordClientID:     "0",
-		DiscordClientSecret: "0",
-		DiscordBotToken:     "0",
+		OwnerID:             "",
+		DiscordClientID:     "",
+		DiscordClientSecret: "",
+		DiscordBotToken:     "",
 		LogLevel:            "info",
 		Environment:         "dev",
 	}
@@ -55,22 +55,16 @@ func InitConfig() {
 
 	// Read config.json
 	decoder := json.NewDecoder(file)
+	decoder.DisallowUnknownFields()
 	err = decoder.Decode(&ConfigData)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to read config.json")
 	}
 
-	// Check for missing fields
-	v := reflect.ValueOf(ConfigData)
-	var fields []string
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Interface() == reflect.Zero(v.Field(i).Type()).Interface() {
-			fields = append(fields, v.Type().Field(i).Name)
-		}
-	}
-
-	if len(fields) > 0 {
-		log.Panic().Interface("fields", fields).Msg("Missing fields in config.json")
+	// Validate config.json
+	err = validator.Validate.Struct(ConfigData)
+	if err != nil {
+		log.Panic().Err(err).Msg("Failed to validate config.json")
 	}
 
 	// Success!

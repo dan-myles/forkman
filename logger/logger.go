@@ -1,8 +1,9 @@
-package utils
+package logger
 
 import (
 	"os"
 
+	"github.com/avvo-na/devil-guard/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -10,7 +11,7 @@ import (
 func InitLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	level := ConfigData.LogLevel
+	level := config.ConfigData.LogLevel
 	switch level {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -30,9 +31,10 @@ func InitLogger() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	env := ConfigData.Environment
+	env := config.ConfigData.Environment
 	if env == "dev" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		log.Info().Msg("Development environment detected, using console output")
 	}
 
 	log.Info().Msg("Initialized logger")

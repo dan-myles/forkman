@@ -1,7 +1,7 @@
 package sentinel
 
 import (
-	"github.com/avvo-na/devil-guard/utils"
+	"github.com/avvo-na/devil-guard/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -11,10 +11,14 @@ type Sentinel struct {
 }
 
 func New() *Sentinel {
-	dg, err := discordgo.New("Bot " + utils.ConfigData.DiscordBotToken)
+	// Create a new Discord session using the provided bot token
+	dg, err := discordgo.New("Bot " + config.ConfigData.DiscordBotToken)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to create Discord session")
 	}
+
+	// Declare intents
+	dg.Identify.Intents = discordgo.IntentsGuildMessages
 
 	return &Sentinel{
 		Client: dg,
@@ -22,7 +26,7 @@ func New() *Sentinel {
 }
 
 func (s *Sentinel) Start() {
-	s.Client.Identify.Intents = discordgo.IntentsGuildMessages
+	log.Info().Msg("Starting bot...")
 
 	err := s.Client.Open()
 	if err != nil {
@@ -31,5 +35,10 @@ func (s *Sentinel) Start() {
 }
 
 func (s *Sentinel) Stop() {
+	log.Info().Msg("Stopping bot...")
 	s.Client.Close()
+}
+
+func (s *Sentinel) RegisterPlugins() {
+	log.Info().Msg("Registering plugins...")
 }
