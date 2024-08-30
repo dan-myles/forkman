@@ -1,0 +1,13 @@
+## This is an example configuration file!
+## One will be generated when you run the bot for the first time.
+## Make sure to fill in the values before running the bot.
+## DO NOT COMMIT THIS FILE TO VERSION CONTROL
+
+{
+  "owner_id": "", # Snowflake of Bot Owner
+  "discord_client_id": "", # Oauth2
+  "discord_client_secret": "", # Oauth2
+  "discord_bot_token": "", # See https://discord.com/developers/applications
+  "log_level": "debug", # debug, info, warn, error, fatal
+  "environment": "dev", # dev, prod
+}
