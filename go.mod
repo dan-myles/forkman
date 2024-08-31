@@ -5,7 +5,6 @@ go 1.23.0
 require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
-	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/rs/zerolog v1.33.0
 )
@@ -22,5 +21,4 @@ require (
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )

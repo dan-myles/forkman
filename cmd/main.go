@@ -5,7 +5,6 @@ import (
 
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/avvo-na/devil-guard/logger"
-	"github.com/avvo-na/devil-guard/plugin"
 	"github.com/avvo-na/devil-guard/sentinel"
 	"github.com/avvo-na/devil-guard/validator"
 	"github.com/eiannone/keyboard"
@@ -15,13 +14,12 @@ import (
 func init() {
 	validator.InitValidator()
 	config.InitConfig()
-	plugin.InitConfig()
 	logger.InitLogger()
 }
 
 func main() {
-	var s *sentinel.Sentinel
-	s = sentinel.New()
+	s := sentinel.New()
+	s.RegisterPlugins()
 	s.Start()
 
 	// Wait here until q is pressed

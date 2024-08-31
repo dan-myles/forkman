@@ -11,7 +11,7 @@ import (
 func InitLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	level := config.ConfigData.LogLevel
+	level := config.AppCfg.LogLevel
 	switch level {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -31,7 +31,7 @@ func InitLogger() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	env := config.ConfigData.Environment
+	env := config.AppCfg.Environment
 	if env == "dev" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		log.Info().Msg("Development environment detected, using console output")
