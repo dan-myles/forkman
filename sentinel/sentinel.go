@@ -5,36 +5,45 @@ import (
 
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
-type Sentinel struct {
-	Session *discordgo.Session
-}
+var Session *discordgo.Session
 
-func New() (*Sentinel, error) {
-	s, err := discordgo.New("Bot " + config.AppCfg.DiscordBotToken)
+func Start() {
+	var err error
+	Session, err = discordgo.New("Bot " + config.AppCfg.DiscordBotToken)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create Discord session %w", err)
+		log.Panic().Err(err).Msg("Failed to create Discord session")
 	}
-
-	return &Sentinel{
-		Session: s,
-	}, nil
 }
 
-func (s *Sentinel) Start() error {
-	err := s.Session.Open()
+func Open() {
+	err := Session.Open()
 	if err != nil {
-		return fmt.Errorf("Failed to open Discord session %w", err)
+		log.Panic().Err(err).Msg("Failed to open Discord session")
 	}
-
-	return nil
 }
 
-func (s *Sentinel) Stop() error {
-	err := s.Session.Close()
+func Close() {
+	err := Session.Close()
 	if err != nil {
-		return fmt.Errorf("Failed to close Discord session %w", err)
+		log.Panic().Err(err).Msg("Failed to close Discord session")
+	}
+}
+
+func AddHandler(handler interface{}) {
+	Session.AddHandler(handler)
+}
+
+func RegisterCommands(commands []*discordgo.ApplicationCommand) error {
+	_, err := Session.ApplicationCommandBulkOverwrite(
+		config.AppCfg.DiscordAppID,
+		config.AppCfg.DiscordDevGuildID,
+		commands,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to register commands %w", err)
 	}
 
 	return nil
