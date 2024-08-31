@@ -19,13 +19,11 @@ func init() {
 
 func main() {
 	s := sentinel.New()
-	s.RegisterPlugins()
 	s.Start()
 
 	// Wait here until q is pressed
 	log.Info().Msg("Bot is now running!")
 	log.Info().Msg("Press 'q' to exit")
-	log.Info().Msg("Press 'r' to reload plugins.json")
 
 	for {
 		key, _, err := keyboard.GetSingleKey()
@@ -39,12 +37,6 @@ func main() {
 			log.Info().Msg("Exiting...")
 			s.Stop()
 			os.Exit(0)
-		}
-
-		if key == rune('r') {
-			log.Info().Msg("Reloading modules.json")
-			s.Stop()
-			s.Start()
 		}
 	}
 }
