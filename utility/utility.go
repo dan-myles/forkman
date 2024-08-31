@@ -1,7 +1,9 @@
 package utility
 
-import "github.com/disgoorg/disgo/discord"
+// This should run every time the bot starts up
+func Register() {
+}
 
-var Commands = []discord.ApplicationCommandCreate{
-	pingCommand,
+// This should only run if the it is not already registered
+func Sync() {
 }
