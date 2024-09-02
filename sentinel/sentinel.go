@@ -1,50 +1,59 @@
 package sentinel
 
 import (
-	"fmt"
+	"sync"
+	"time"
 
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
 
-var Session *discordgo.Session
+var (
+	Session      *discordgo.Session
+	SessionMutex *sync.Mutex
+)
 
-func Start() {
-	var err error
-	Session, err = discordgo.New("Bot " + config.AppCfg.DiscordBotToken)
+func InitSentinel() {
+	// Init a new Discord session
+	s, err := discordgo.New("Bot " + config.AppCfg.DiscordBotToken)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to create Discord session")
 	}
+
+	// Set intents
+	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
+
+	Session = s
+	SessionMutex = &sync.Mutex{}
 }
 
-func Open() {
+func Start() error {
+	SessionMutex.Lock()
+	defer SessionMutex.Unlock()
+
+	// Open connection to Discord
 	err := Session.Open()
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to open Discord session")
+		return err
 	}
+
+	time := time.Now()
+	log.Info().Time("time", time).Msg("Opened connection to Discord")
+	return nil
 }
 
-func Close() {
+func Stop() error {
+	SessionMutex.Lock()
+	defer SessionMutex.Unlock()
+
+	// Close connection to Discord
 	err := Session.Close()
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to close Discord session")
-	}
-}
-
-func AddHandler(handler interface{}) {
-	Session.AddHandler(handler)
-}
-
-func RegisterCommands(commands []*discordgo.ApplicationCommand) error {
-	_, err := Session.ApplicationCommandBulkOverwrite(
-		config.AppCfg.DiscordAppID,
-		config.AppCfg.DiscordDevGuildID,
-		commands,
-	)
-	if err != nil {
-		return fmt.Errorf("Failed to register commands %w", err)
+		return err
 	}
 
+	time := time.Now()
+	log.Info().Time("time", time).Msg("Closed connection to Discord")
 	return nil
 }

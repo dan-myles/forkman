@@ -2,11 +2,19 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"reflect"
+	"strings"
+	"sync"
 
 	"github.com/avvo-na/devil-guard/validator"
 	"github.com/rs/zerolog/log"
 )
+
+// This module is responsible for loading configuration files
+// However, module config can be changed at runtime, and is NOT
+// done here. This is just for initial loading.
 
 type AppConfig struct {
 	DiscordAppID        string `json:"discord_app_id" validate:"required"`
@@ -20,17 +28,17 @@ type AppConfig struct {
 }
 
 // Should be "disabled" or "enabled"
-type PluginConfig struct {
+type ModuleConfig struct {
 	Utility string `json:"utility" validate:"required,oneof=disabled enabled"`
 }
 
 var (
-	PluginCfg        PluginConfig
-	PluginDefaultCfg PluginConfig = PluginConfig{
+	ModuleCfg        *ModuleConfig
+	ModuleDefaultCfg *ModuleConfig = &ModuleConfig{
 		Utility: "disabled",
 	}
-	AppCfg        AppConfig
-	AppDefaultCfg AppConfig = AppConfig{
+	AppCfg        *AppConfig
+	AppDefaultCfg *AppConfig = &AppConfig{
 		DiscordAppID:        "",
 		DiscordClientID:     "",
 		DiscordClientSecret: "",
@@ -40,6 +48,7 @@ var (
 		LogLevel:            "info",
 		Environment:         "dev",
 	}
+	mutex = &sync.Mutex{}
 )
 
 func InitConfig() {
@@ -47,6 +56,51 @@ func InitConfig() {
 	// This is because the bot cannot run without these files!
 	loadAppCfg()
 	loadPluginCfg()
+}
+
+func WriteDisableModule(module string) error {
+	return writeModule(module, "disabled")
+}
+
+func WriteEnableModule(module string) error {
+	return writeModule(module, "enabled")
+}
+
+func writeModule(module string, value string) error {
+	// Lock the mutex
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// Find the module that matches the name
+	r := reflect.ValueOf(ModuleCfg)
+	f := reflect.Indirect(r).FieldByNameFunc(func(f string) bool {
+		if strings.EqualFold(f, module) {
+			return true
+		}
+
+		return false
+	})
+	if !f.IsValid() {
+		return fmt.Errorf("Module not found: %s", module)
+	}
+
+	// WARN: This can panic and will need more error handling in the future
+	f.Set(reflect.ValueOf(value))
+
+	// Write the new config
+	file, err := os.Create("modules.json")
+	if err != nil {
+		fmt.Errorf("Failed to open modules.json: %v", err)
+	}
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(ModuleCfg)
+	if err != nil {
+		fmt.Errorf("Failed to write modules.json: %v", err)
+	}
+
+	log.Info().Interface("config", ModuleCfg).Msg("Module config updated")
+	return nil
 }
 
 func loadAppCfg() {
@@ -92,41 +146,41 @@ func loadAppCfg() {
 }
 
 func loadPluginCfg() {
-	file, err := os.Open("plugins.json")
+	file, err := os.Open("modules.json")
 	if err != nil {
 		log.Warn().Msg("Plugin config file not found, generating...")
 
 		// Create config.json
-		file, err := os.Create("plugins.json")
+		file, err := os.Create("modules.json")
 		if err != nil {
-			log.Panic().Err(err).Msg("Failed to create plugins.json")
+			log.Panic().Err(err).Msg("Failed to create modules.json")
 		}
 
 		// Write default config
 		encoder := json.NewEncoder(file)
-		err = encoder.Encode(PluginDefaultCfg)
+		err = encoder.Encode(ModuleDefaultCfg)
 		if err != nil {
 			log.Panic().Err(err).Msg("Failed to write default config")
 		}
 
 		// this will exit the program!
-		log.Fatal().Msg("Config file generated, please setup plugins.json and restart the bot")
+		log.Fatal().Msg("Config file generated, please setup modules.json and restart the bot")
 	}
 
 	// Read config.json
 	decoder := json.NewDecoder(file)
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&PluginCfg)
+	err = decoder.Decode(&ModuleCfg)
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to read plugins.json")
+		log.Panic().Err(err).Msg("Failed to read modules.json")
 	}
 
 	// Validate config.json
-	err = validator.Validate.Struct(PluginCfg)
+	err = validator.Validate.Struct(ModuleCfg)
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to validate plugins.json")
+		log.Panic().Err(err).Msg("Failed to validate modules.json")
 	}
 
 	// Success!
-	log.Info().Interface("config", PluginCfg).Msg("Plugin config loaded")
+	log.Info().Interface("config", ModuleCfg).Msg("Plugin config loaded")
 }
