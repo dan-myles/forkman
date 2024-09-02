@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/avvo-na/devil-guard/validator"
 	"github.com/rs/zerolog/log"
 )
 
-// This module is responsible for loading configuration files
-// However, module config can be changed at runtime, and is NOT
-// done here. This is just for initial loading.
+// TODO: WriteDisable/Enable needs to be updated to handle
+// more complex config structs. This will be done by just
+// offering a public "WriteConfig" function that assumes
+// you've just unlocked the config mutex and have made changes
+// to it. This is mainly for module config.
 
 type AppConfig struct {
 	DiscordAppID        string `json:"discord_app_id" validate:"required"`
@@ -29,14 +29,27 @@ type AppConfig struct {
 
 // Should be "disabled" or "enabled"
 type ModuleConfig struct {
-	Utility      string `json:"utility" validate:"required,oneof=disabled enabled"`
-	Verification string `json:"verification" validate:"required,oneof=disabled enabled"`
+	Utility struct {
+		Enabled bool `json:"enabled" validate:"required"`
+	} `json:"utility"`
+	Verification struct {
+		Enabled bool `json:"enabled" validate:"required"`
+	} `json:"verification"`
 }
 
 var (
 	ModuleCfg        *ModuleConfig
 	ModuleDefaultCfg *ModuleConfig = &ModuleConfig{
-		Utility: "disabled",
+		Utility: struct {
+			Enabled bool `json:"enabled" validate:"required"`
+		}{
+			Enabled: false,
+		},
+		Verification: struct {
+			Enabled bool `json:"enabled" validate:"required"`
+		}{
+			Enabled: false,
+		},
 	}
 	AppCfg        *AppConfig
 	AppDefaultCfg *AppConfig = &AppConfig{
@@ -49,7 +62,7 @@ var (
 		LogLevel:            "info",
 		Environment:         "dev",
 	}
-	mutex = &sync.Mutex{}
+	Mutex = &sync.Mutex{}
 )
 
 func InitConfig() {
@@ -61,49 +74,24 @@ func InitConfig() {
 
 // TODO: check if the module is already enabled/disabled
 // also check if its an actual module
-func WriteDisableModule(module string) error {
-	return writeModule(module, "disabled")
-}
+func WriteModuleConfig() error {
+	Mutex.Lock()
+	defer Mutex.Unlock()
 
-func WriteEnableModule(module string) error {
-	return writeModule(module, "enabled")
-}
-
-func writeModule(module string, value string) error {
-	// Lock the mutex
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	// Find the module that matches the name
-	r := reflect.ValueOf(ModuleCfg)
-	f := reflect.Indirect(r).FieldByNameFunc(func(f string) bool {
-		if strings.EqualFold(f, module) {
-			return true
-		}
-
-		return false
-	})
-	if !f.IsValid() {
-		return fmt.Errorf("Module not found: %s", module)
-	}
-
-	// WARN: This can panic and will need more error handling in the future
-	f.Set(reflect.ValueOf(value))
-
-	// Write the new config
-	file, err := os.Create("modules.json")
+	// Write app config
+	file, err := os.Create("config.json")
 	if err != nil {
-		fmt.Errorf("Failed to open modules.json: %v", err)
+		return fmt.Errorf("Failed to open config.json: %w", err)
 	}
 
+	// Write our new config to file
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	err = encoder.Encode(ModuleCfg)
 	if err != nil {
-		fmt.Errorf("Failed to write modules.json: %v", err)
+		return fmt.Errorf("Failed to write config.json: %w", err)
 	}
 
-	log.Debug().Interface("config", ModuleCfg).Msg("Module config updated")
 	return nil
 }
 

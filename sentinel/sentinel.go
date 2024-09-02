@@ -31,30 +31,17 @@ func InitSentinel() {
 	SessionMutex.Lock()
 	defer SessionMutex.Unlock()
 
-	// Grab config and enable/disable modules
-	if config.ModuleCfg.Utility == "enabled" {
-		err = utility.EnableModule(Session)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to enable utility module")
-		}
-	} else if config.ModuleCfg.Utility == "disabled" {
-		err = utility.DisableModule(Session)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to disable utility module")
-		}
+	// Register modules
+	if config.ModuleCfg.Utility.Enabled {
+		utility.EnableModule(Session)
+	} else {
+		utility.DisableModule(Session)
 	}
 
-	// Grab config and enable/disable modules
-	if config.ModuleCfg.Verification == "enabled" {
-		err = verification.EnableModule(Session)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to enable verification module")
-		}
-	} else if config.ModuleCfg.Verification == "disabled" {
-		err = verification.DisableModule(Session)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to disable verification module")
-		}
+	if config.ModuleCfg.Verification.Enabled {
+		verification.EnableModule(Session)
+	} else {
+		verification.DisableModule(Session)
 	}
 
 	log.Info().Msg("Sentinel initialized, modules registered")

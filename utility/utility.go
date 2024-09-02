@@ -22,10 +22,13 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 
 func EnableModule(s *discordgo.Session) error {
 	// Write the module config
-	err := config.WriteEnableModule("utility")
+	config.Mutex.Lock()
+	config.ModuleCfg.Utility.Enabled = true
+	err := config.WriteModuleConfig()
 	if err != nil {
 		return fmt.Errorf("failed to write module config: %w", err)
 	}
+	config.Mutex.Unlock()
 
 	// Register the commands
 	for _, v := range commands {
@@ -57,10 +60,13 @@ func EnableModule(s *discordgo.Session) error {
 // TODO: will be called from a rest API
 func DisableModule(s *discordgo.Session) error {
 	// Write the module config
-	err := config.WriteDisableModule("utility")
+	config.Mutex.Lock()
+	config.ModuleCfg.Utility.Enabled = false
+	err := config.WriteModuleConfig()
 	if err != nil {
 		return fmt.Errorf("failed to write module config: %w", err)
 	}
+	config.Mutex.Unlock()
 
 	// NOTE:
 	// Grab all regeistered and cross check with the commands
