@@ -34,8 +34,9 @@ func EnableModule(s *discordgo.Session) error {
 			config.AppCfg.DiscordDevGuildID,
 			v,
 		)
+		// TODO: add better handling if one command fails to register
 		if err != nil {
-			return fmt.Errorf("failed to create command: %w", err)
+			log.Error().Err(err).Msg("Failed to register command")
 		}
 	}
 
@@ -49,11 +50,38 @@ func EnableModule(s *discordgo.Session) error {
 		}
 	})
 
+	log.Info().Msg("Enabled utility module")
 	return nil
 }
 
 // TODO: will be called from a rest API
-func DisableModule() error {
+func DisableModule(s *discordgo.Session) error {
+	// Write the module config
+	err := config.WriteDisableModule("utility")
+	if err != nil {
+		return fmt.Errorf("failed to write module config: %w", err)
+	}
+
+	// NOTE:
+	// Grab all regeistered and cross check with the commands
+	// n^2 so its a bit slow :() idk if it matters
+	registeredCommands, err := s.ApplicationCommands(config.AppCfg.DiscordAppID, config.AppCfg.DiscordDevGuildID)
+	for _, v := range registeredCommands {
+		for _, c := range commands {
+			if c.Name == v.Name {
+				err := s.ApplicationCommandDelete(
+					config.AppCfg.DiscordAppID,
+					config.AppCfg.DiscordDevGuildID,
+					v.ID,
+				)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to delete command")
+				}
+			}
+		}
+	}
+
+	log.Info().Msg("Disabled utility module")
 	return nil
 }
 

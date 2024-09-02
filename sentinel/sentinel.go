@@ -30,11 +30,16 @@ func InitSentinel() {
 	SessionMutex.Lock()
 	defer SessionMutex.Unlock()
 
-	// Grab config and enable modules
+	// Grab config and enable/disable modules
 	if config.ModuleCfg.Utility == "enabled" {
 		err = utility.EnableModule(Session)
 		if err != nil {
-			log.Panic().Err(err).Msg("Failed to enable utility module")
+			log.Error().Err(err).Msg("Failed to enable utility module")
+		}
+	} else if config.ModuleCfg.Utility == "disabled" {
+		err = utility.DisableModule(Session)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to disable utility module")
 		}
 	}
 
