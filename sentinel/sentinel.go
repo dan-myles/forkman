@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/avvo-na/devil-guard/config"
+	"github.com/avvo-na/devil-guard/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -26,6 +27,18 @@ func InitSentinel() {
 
 	Session = s
 	SessionMutex = &sync.Mutex{}
+	SessionMutex.Lock()
+	defer SessionMutex.Unlock()
+
+	// Grab config and enable modules
+	if config.ModuleCfg.Utility == "enabled" {
+		err = utility.EnableModule(Session)
+		if err != nil {
+			log.Panic().Err(err).Msg("Failed to enable utility module")
+		}
+	}
+
+	log.Info().Msg("Sentinel initialized, modules registered")
 }
 
 func Start() error {
