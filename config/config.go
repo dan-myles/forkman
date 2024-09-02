@@ -29,7 +29,8 @@ type AppConfig struct {
 
 // Should be "disabled" or "enabled"
 type ModuleConfig struct {
-	Utility string `json:"utility" validate:"required,oneof=disabled enabled"`
+	Utility      string `json:"utility" validate:"required,oneof=disabled enabled"`
+	Verification string `json:"verification" validate:"required,oneof=disabled enabled"`
 }
 
 var (
@@ -58,6 +59,8 @@ func InitConfig() {
 	loadPluginCfg()
 }
 
+// TODO: check if the module is already enabled/disabled
+// also check if its an actual module
 func WriteDisableModule(module string) error {
 	return writeModule(module, "disabled")
 }
@@ -94,12 +97,13 @@ func writeModule(module string, value string) error {
 	}
 
 	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
 	err = encoder.Encode(ModuleCfg)
 	if err != nil {
 		fmt.Errorf("Failed to write modules.json: %v", err)
 	}
 
-	log.Info().Interface("config", ModuleCfg).Msg("Module config updated")
+	log.Debug().Interface("config", ModuleCfg).Msg("Module config updated")
 	return nil
 }
 
@@ -118,6 +122,7 @@ func loadAppCfg() {
 
 		// Write default config
 		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", "  ")
 		err = encoder.Encode(AppDefaultCfg)
 		if err != nil {
 			log.Panic().Err(err).Msg("Failed to write default config")
@@ -158,6 +163,7 @@ func loadPluginCfg() {
 
 		// Write default config
 		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", "  ")
 		err = encoder.Encode(ModuleDefaultCfg)
 		if err != nil {
 			log.Panic().Err(err).Msg("Failed to write default config")

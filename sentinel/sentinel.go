@@ -6,6 +6,7 @@ import (
 
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/avvo-na/devil-guard/utility"
+	"github.com/avvo-na/devil-guard/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -40,6 +41,19 @@ func InitSentinel() {
 		err = utility.DisableModule(Session)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to disable utility module")
+		}
+	}
+
+	// Grab config and enable/disable modules
+	if config.ModuleCfg.Verification == "enabled" {
+		err = verification.EnableModule(Session)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to enable verification module")
+		}
+	} else if config.ModuleCfg.Verification == "disabled" {
+		err = verification.DisableModule(Session)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to disable verification module")
 		}
 	}
 
