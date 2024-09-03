@@ -26,10 +26,9 @@ func InitSentinel() {
 	// Set intents
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 
+	// Set session
 	Session = s
 	SessionMutex = &sync.Mutex{}
-	SessionMutex.Lock()
-	defer SessionMutex.Unlock()
 
 	// Register modules
 	if config.ModuleCfg.Utility.Enabled {
