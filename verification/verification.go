@@ -11,13 +11,13 @@ import (
 // This is the list of commands that the bot will register
 var commands = []*discordgo.ApplicationCommand{
 	{
-		Name:        "echo",
-		Description: "Ping the bot",
+		Name:        "send-panel",
+		Description: "Send a verification panel in the current channel",
 	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"echo": echo,
+	"send-panel": sendPanel,
 }
 
 func EnableModule(s *discordgo.Session) error {
@@ -91,11 +91,11 @@ func DisableModule(s *discordgo.Session) error {
 	return nil
 }
 
-func echo(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func sendPanel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Pong!",
+			Content: "EMAIL GUARD SETTINGS",
 		},
 	})
 	log.Info().Interface("command", i.ApplicationCommandData()).Msg("Responded to interaction request")

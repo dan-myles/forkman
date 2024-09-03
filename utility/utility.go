@@ -39,7 +39,7 @@ func EnableModule(s *discordgo.Session) error {
 		)
 		// TODO: add better handling if one command fails to register
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to register command")
+			log.Error().Stack().Err(err).Msg("Failed to register command")
 		}
 	}
 
@@ -81,7 +81,7 @@ func DisableModule(s *discordgo.Session) error {
 					v.ID,
 				)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to delete command")
+					log.Error().Stack().Err(err).Msg("Failed to delete command")
 				}
 			}
 		}

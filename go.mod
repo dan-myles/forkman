@@ -3,20 +3,18 @@ module github.com/avvo-na/devil-guard
 go 1.23.0
 
 require (
-	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/rs/zerolog v1.33.0
 )
 
 require (
-	github.com/disgoorg/json v1.1.0 // indirect
-	github.com/sasha-s/go-csync v0.0.0-20240107134140-fcbab37b09ad // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 )
 
 require (
 	github.com/bwmarrin/discordgo v0.28.1
-	github.com/disgoorg/disgo v0.18.10
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

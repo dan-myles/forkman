@@ -72,16 +72,12 @@ func InitConfig() {
 	loadPluginCfg()
 }
 
-// TODO: check if the module is already enabled/disabled
-// also check if its an actual module
+// WARN: This function assumes you have a lock on the config mutex
 func WriteModuleConfig() error {
-	Mutex.Lock()
-	defer Mutex.Unlock()
-
 	// Write app config
-	file, err := os.Create("config.json")
+	file, err := os.Create("modules.json")
 	if err != nil {
-		return fmt.Errorf("Failed to open config.json: %w", err)
+		return fmt.Errorf("Failed to open modules.json: %w", err)
 	}
 
 	// Write our new config to file
@@ -89,7 +85,7 @@ func WriteModuleConfig() error {
 	encoder.SetIndent("", "  ")
 	err = encoder.Encode(ModuleCfg)
 	if err != nil {
-		return fmt.Errorf("Failed to write config.json: %w", err)
+		return fmt.Errorf("Failed to write modules.json: %w", err)
 	}
 
 	return nil
