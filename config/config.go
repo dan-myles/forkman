@@ -2,19 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"sync"
 
 	"github.com/avvo-na/devil-guard/validator"
 	"github.com/rs/zerolog/log"
 )
-
-// TODO: WriteDisable/Enable needs to be updated to handle
-// more complex config structs. This will be done by just
-// offering a public "WriteConfig" function that assumes
-// you've just unlocked the config mutex and have made changes
-// to it. This is mainly for module config.
 
 type AppConfig struct {
 	DiscordAppID        string `json:"discord_app_id" validate:"required"`
@@ -27,73 +20,50 @@ type AppConfig struct {
 	Environment         string `json:"environment" validate:"required"`
 }
 
-// Should be "disabled" or "enabled"
+type UtilityConfig struct {
+	Enabled *bool `json:"enabled" validate:"required"`
+}
+
+type VerificationConfig struct {
+	Enabled *bool `json:"enabled" validate:"required"`
+}
+
 type ModuleConfig struct {
-	Utility struct {
-		Enabled bool `json:"enabled" validate:"required"`
-	} `json:"utility"`
-	Verification struct {
-		Enabled bool `json:"enabled" validate:"required"`
-	} `json:"verification"`
+	Utility      *UtilityConfig      `json:"utility" validate:"required"`
+	Verification *VerificationConfig `json:"verification" validate:"required"`
+}
+
+type Config struct {
+	AppCfg    *AppConfig    `json:"app" validate:"required"`
+	ModuleCfg *ModuleConfig `json:"modules" validate:"required"`
+	RWMutex   *sync.RWMutex `json:"-"`
 }
 
 var (
-	ModuleCfg        *ModuleConfig
-	ModuleDefaultCfg *ModuleConfig = &ModuleConfig{
-		Utility: struct {
-			Enabled bool `json:"enabled" validate:"required"`
-		}{
-			Enabled: false,
+	instance   *Config = &Config{}
+	defaultCfg *Config = &Config{
+		AppCfg: &AppConfig{
+			DiscordAppID:        "",
+			DiscordClientID:     "",
+			DiscordClientSecret: "",
+			DiscordBotToken:     "",
+			DiscordDevGuildID:   "",
+			DiscordOwnerID:      "",
+			LogLevel:            "info",
+			Environment:         "dev",
 		},
-		Verification: struct {
-			Enabled bool `json:"enabled" validate:"required"`
-		}{
-			Enabled: false,
+		ModuleCfg: &ModuleConfig{
+			Utility: &UtilityConfig{
+				Enabled: new(bool),
+			},
+			Verification: &VerificationConfig{
+				Enabled: new(bool),
+			},
 		},
 	}
-	AppCfg        *AppConfig
-	AppDefaultCfg *AppConfig = &AppConfig{
-		DiscordAppID:        "",
-		DiscordClientID:     "",
-		DiscordClientSecret: "",
-		DiscordBotToken:     "",
-		DiscordDevGuildID:   "",
-		DiscordOwnerID:      "",
-		LogLevel:            "info",
-		Environment:         "dev",
-	}
-	Mutex = &sync.Mutex{}
 )
 
-func InitConfig() {
-	// Both of these functions will just panic if they fail
-	// This is because the bot cannot run without these files!
-	loadAppCfg()
-	loadPluginCfg()
-}
-
-// WARN: This function assumes you have a lock on the config mutex
-func WriteModuleConfig() error {
-	// Write app config
-	file, err := os.Create("modules.json")
-	if err != nil {
-		return fmt.Errorf("Failed to open modules.json: %w", err)
-	}
-
-	// Write our new config to file
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	err = encoder.Encode(ModuleCfg)
-	if err != nil {
-		return fmt.Errorf("Failed to write modules.json: %w", err)
-	}
-
-	return nil
-}
-
-func loadAppCfg() {
-	// Check current directory for config.json
-	// Generate one if not found
+func Init() {
 	file, err := os.Open("config.json")
 	if err != nil {
 		log.Warn().Msg("Config file not found, generating...")
@@ -107,7 +77,7 @@ func loadAppCfg() {
 		// Write default config
 		encoder := json.NewEncoder(file)
 		encoder.SetIndent("", "  ")
-		err = encoder.Encode(AppDefaultCfg)
+		err = encoder.Encode(defaultCfg)
 		if err != nil {
 			log.Panic().Err(err).Msg("Failed to write default config")
 		}
@@ -119,58 +89,40 @@ func loadAppCfg() {
 	// Read config.json
 	decoder := json.NewDecoder(file)
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&AppCfg)
+	err = decoder.Decode(instance)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to read config.json")
 	}
 
+	// Set the RWMutex
+	instance.RWMutex = &sync.RWMutex{}
+
 	// Validate config.json
-	err = validator.Validate.Struct(AppCfg)
+	err = validator.Validate.Struct(instance)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to validate config.json")
 	}
 
 	// Success!
-	log.Info().Interface("config", AppCfg).Msg("Config loaded")
+	log.Info().Interface("config", instance).Msg("Config loaded")
 }
 
-func loadPluginCfg() {
-	file, err := os.Open("modules.json")
+func GetConfig() *Config {
+	return instance
+}
+
+func (c *Config) WriteConfig() error {
+	file, err := os.Open("config.json")
 	if err != nil {
-		log.Warn().Msg("Plugin config file not found, generating...")
-
-		// Create config.json
-		file, err := os.Create("modules.json")
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to create modules.json")
-		}
-
-		// Write default config
-		encoder := json.NewEncoder(file)
-		encoder.SetIndent("", "  ")
-		err = encoder.Encode(ModuleDefaultCfg)
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to write default config")
-		}
-
-		// this will exit the program!
-		log.Fatal().Msg("Config file generated, please setup modules.json and restart the bot")
+		return err
 	}
 
-	// Read config.json
-	decoder := json.NewDecoder(file)
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&ModuleCfg)
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(c)
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to read modules.json")
+		return err
 	}
 
-	// Validate config.json
-	err = validator.Validate.Struct(ModuleCfg)
-	if err != nil {
-		log.Panic().Err(err).Msg("Failed to validate modules.json")
-	}
-
-	// Success!
-	log.Info().Interface("config", ModuleCfg).Msg("Plugin config loaded")
+	return nil
 }

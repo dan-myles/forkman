@@ -8,11 +8,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func InitLogger() {
+func Init() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	level := config.AppCfg.LogLevel
-	switch level {
+	c := config.GetConfig()
+	c.RWMutex.RLock()
+	defer c.RWMutex.RUnlock()
+
+	switch c.AppCfg.LogLevel {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	case "debug":
@@ -32,7 +35,7 @@ func InitLogger() {
 	}
 
 	// Dev Only Settings
-	env := config.AppCfg.Environment
+	env := c.AppCfg.Environment
 	if env == "dev" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		log.Info().Msg("Development environment detected, using console output")

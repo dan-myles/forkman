@@ -1,42 +1,43 @@
 package main
 
 import (
-	"os"
-
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/avvo-na/devil-guard/logger"
 	"github.com/avvo-na/devil-guard/sentinel"
 	"github.com/avvo-na/devil-guard/validator"
-	"github.com/eiannone/keyboard"
 	"github.com/rs/zerolog/log"
 )
 
+// This function runs before the main entry point
+// No error handling here as if we fail, we can't continue
+// anyway, it is a fatal error.
 func init() {
-	validator.InitValidator()
-	config.InitConfig()
-	logger.InitLogger()
-	sentinel.InitSentinel()
+	validator.Init()
+	config.Init()
+	logger.Init()
+	sentinel.Init()
 }
 
 func main() {
-	sentinel.Start()
-
-	// Wait here until q is pressed
-	log.Info().Msg("Bot is now running!")
-	log.Info().Msg("Press 'q' to exit")
-
-	for {
-		key, _, err := keyboard.GetSingleKey()
-		defer keyboard.Close()
-
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to read key")
-		}
-
-		if key == rune('q') {
-			log.Info().Msg("Exiting...")
-			sentinel.Stop()
-			os.Exit(0)
-		}
-	}
+	// sentinel.Start()
+	//
+	// // Wait here until q is pressed
+	// log.Info().Msg("Bot is now running!")
+	// log.Info().Msg("Press 'q' to exit")
+	//
+	// for {
+	// 	key, _, err := keyboard.GetSingleKey()
+	// 	defer keyboard.Close()
+	//
+	// 	if err != nil {
+	// 		log.Panic().Err(err).Msg("Failed to read key")
+	// 	}
+	//
+	// 	if key == rune('q') {
+	// 		log.Info().Msg("Exiting...")
+	// 		sentinel.Stop()
+	// 		os.Exit(0)
+	// 	}
+	// }
+	log.Info().Msg("Hello, World!")
 }

@@ -7,7 +7,7 @@ import (
 
 var Validate *validator.Validate
 
-func InitValidator() {
+func Init() {
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 	log.Info().Msg("Initialized validator")
 }

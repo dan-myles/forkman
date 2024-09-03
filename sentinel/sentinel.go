@@ -2,23 +2,25 @@ package sentinel
 
 import (
 	"sync"
-	"time"
 
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/avvo-na/devil-guard/utility"
-	"github.com/avvo-na/devil-guard/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	Session      *discordgo.Session
-	SessionMutex *sync.Mutex
-)
+var instance *Sentinel
 
-func InitSentinel() {
-	// Init a new Discord session
-	s, err := discordgo.New("Bot " + config.AppCfg.DiscordBotToken)
+type Sentinel struct {
+	Session       *discordgo.Session
+	ModuleManager *ModuleManager
+	Mutex         *sync.Mutex
+}
+
+func Init() {
+	// Grab our token :)
+	token := config.GetConfig().AppCfg.DiscordBotToken
+	s, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to create Discord session")
 	}
@@ -26,52 +28,38 @@ func InitSentinel() {
 	// Set intents
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 
-	// Set session
-	Session = s
-	SessionMutex = &sync.Mutex{}
-
-	// Register modules
-	if config.ModuleCfg.Utility.Enabled {
-		utility.EnableModule(Session)
-	} else {
-		utility.DisableModule(Session)
+	// Set session & mutex
+	instance = &Sentinel{
+		Session:       s,
+		Mutex:         &sync.Mutex{},
+		ModuleManager: &ModuleManager{},
 	}
 
-	if config.ModuleCfg.Verification.Enabled {
-		verification.EnableModule(Session)
-	} else {
-		verification.DisableModule(Session)
-	}
+	// Register Modules
+	instance.ModuleManager.RegisterModule(&utility.UtilityModule{})
+
+	// Enable Modules
+	instance.ModuleManager.EnableModules()
 
 	log.Info().Msg("Sentinel initialized, modules registered")
 }
 
-func Start() error {
-	SessionMutex.Lock()
-	defer SessionMutex.Unlock()
-
-	// Open connection to Discord
-	err := Session.Open()
-	if err != nil {
-		return err
-	}
-
-	time := time.Now()
-	log.Info().Time("time", time).Msg("Opened connection to Discord")
-	return nil
+func GetSentinel() *Sentinel {
+	return instance
 }
 
-func Stop() error {
-	SessionMutex.Lock()
-	defer SessionMutex.Unlock()
-
-	// Close connection to Discord
-	err := Session.Close()
+func (s *Sentinel) Start() {
+	// Open the websocket and begin listening.
+	err := s.Session.Open()
 	if err != nil {
-		return err
+		log.Panic().Err(err).Msg("Failed to open connection to Discord")
 	}
+}
 
-	time := time.Now()
-	log.Info().Time("time", time).Msg("Closed connection to Discord")
-	return nil
+func (s *Sentinel) Stop() {
+	// Close the websocket
+	err := s.Session.Close()
+	if err != nil {
+		log.Panic().Err(err).Msg("Failed to close connection to Discord")
+	}
 }
