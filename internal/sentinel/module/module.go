@@ -12,7 +12,6 @@ import (
 // TODO: start locking in all functions
 
 type Module interface {
-	// NOTE: All modules must implement these methods!
 	Name() string
 	Enable(s *discordgo.Session) error
 	Disable(s *discordgo.Session) error

@@ -112,7 +112,7 @@ func GetConfig() *Config {
 }
 
 func (c *Config) WriteConfig() error {
-	file, err := os.Open("config.json")
+	file, err := os.Create("config.json")
 	if err != nil {
 		return err
 	}

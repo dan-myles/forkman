@@ -1,5 +1,7 @@
 package sentinel
 
+// TODO : do not release Start() until we receive a ready event from discord
+
 import (
 	"sync"
 
@@ -24,17 +26,38 @@ type Sentinel struct {
 
 func New() *Sentinel {
 	once.Do(func() {
-		// Grab our token :)
+		// Grab our token n stufff
 		token := config.GetConfig().AppCfg.DiscordBotToken
+		appID := config.GetConfig().AppCfg.DiscordAppID
+		devGuildID := config.GetConfig().AppCfg.DiscordDevGuildID
+
+		// Create a new Discord session using the provided bot token.
+		log.Debug().Msg("Creating Discord session...")
 		session, err := discordgo.New("Bot " + token)
 		if err != nil {
 			log.Panic().Err(err).Msg("Failed to create Discord session")
 		}
 
 		// Set intents
-		session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
+		session.Identify.Intents = discordgo.IntentsAll
+
+		// Clean commands
+		// TODO: eventually only do this in dev mode
+		log.Debug().Msg("Cleaning commands...")
+		cmds, err := session.ApplicationCommands(appID, devGuildID)
+		if err != nil {
+			log.Panic().Err(err).Msg("Failed to get commands")
+		}
+
+		for _, cmd := range cmds {
+			err := session.ApplicationCommandDelete(appID, devGuildID, cmd.ID)
+			if err != nil {
+				log.Panic().Err(err).Msg("Failed to delete command")
+			}
+		}
 
 		// Register modules
+		log.Debug().Msg("Init module manager...")
 		moduleManager := &module.ModuleManager{}
 		moduleManager.AddModule(utility.New())
 		moduleManager.AddModule(verification.New())

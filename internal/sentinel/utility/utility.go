@@ -21,6 +21,14 @@ var commands = []*discordgo.ApplicationCommand{
 				Name:        "all",
 				Description: "Give to all users",
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "role",
+						Description: "Role to give",
+						Type:        discordgo.ApplicationCommandOptionRole,
+						Required:    true,
+					},
+				},
 			},
 		},
 	},
@@ -81,7 +89,7 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 		handler(s, i)
 	})
 
-	log.Info().Msg("Utility module enabled!")
+	log.Debug().Msg("Utility module registration complete")
 	return nil
 }
 
@@ -127,6 +135,6 @@ func (u *UtilityModule) Disable(s *discordgo.Session) error {
 		}
 	}
 
-	log.Info().Msg("Utility module disabled!")
+	log.Debug().Msg("Utility module deregistration complete")
 	return nil
 }
