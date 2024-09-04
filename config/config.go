@@ -29,20 +29,20 @@ type VerificationConfig struct {
 }
 
 type ModuleConfig struct {
-	Utility      *UtilityConfig      `json:"utility" validate:"required"`
-	Verification *VerificationConfig `json:"verification" validate:"required"`
+	Utility      UtilityConfig      `json:"utility" validate:"required"`
+	Verification VerificationConfig `json:"verification" validate:"required"`
 }
 
 type Config struct {
-	AppCfg    *AppConfig    `json:"app" validate:"required"`
-	ModuleCfg *ModuleConfig `json:"modules" validate:"required"`
+	AppCfg    AppConfig     `json:"app" validate:"required"`
+	ModuleCfg ModuleConfig  `json:"modules" validate:"required"`
 	RWMutex   *sync.RWMutex `json:"-"`
 }
 
 var (
 	instance   *Config = &Config{}
 	defaultCfg *Config = &Config{
-		AppCfg: &AppConfig{
+		AppCfg: AppConfig{
 			DiscordAppID:        "",
 			DiscordClientID:     "",
 			DiscordClientSecret: "",
@@ -52,11 +52,11 @@ var (
 			LogLevel:            "info",
 			Environment:         "dev",
 		},
-		ModuleCfg: &ModuleConfig{
-			Utility: &UtilityConfig{
+		ModuleCfg: ModuleConfig{
+			Utility: UtilityConfig{
 				Enabled: new(bool),
 			},
-			Verification: &VerificationConfig{
+			Verification: VerificationConfig{
 				Enabled: new(bool),
 			},
 		},
