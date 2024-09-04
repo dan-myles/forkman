@@ -2,12 +2,12 @@ package main
 
 import (
 	"os"
+	"os/signal"
 
 	"github.com/avvo-na/devil-guard/common/logger"
 	"github.com/avvo-na/devil-guard/common/validator"
 	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/avvo-na/devil-guard/internal/sentinel"
-	"github.com/eiannone/keyboard"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,25 +21,21 @@ func init() {
 }
 
 func main() {
+	// Start the bot
 	s := sentinel.New()
 	s.Start()
 
 	// Wait here until q is pressed
 	log.Info().Msg("Bot is now running!")
-	log.Info().Msg("Press 'q' to exit")
+	log.Info().Msg("Press 'CTRL-C' to exit")
 
-	for {
-		key, _, err := keyboard.GetSingleKey()
-		defer keyboard.Close()
+	// Wait for ctrl-c to exit
+	defer func() {
+		log.Info().Msg("Stopping bot...")
+		s.Stop()
+	}()
 
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to read key")
-		}
-
-		if key == rune('q') || key == rune(keyboard.KeyCtrlC) {
-			log.Info().Msg("Exiting...")
-			s.Stop()
-			os.Exit(0)
-		}
-	}
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
 }
