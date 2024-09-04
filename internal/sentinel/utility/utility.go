@@ -68,18 +68,27 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 	if err != nil {
 		return fmt.Errorf("Failed to write config: %w", err)
 	}
-	log.Debug().Msg("Updated utility module config")
+	log.Debug().
+		Interface("config", config).
+		Msg("Updated utility module config")
 
 	// Register all commands
-	log.Debug().Msg("Registering utility commands...")
 	for _, command := range commands {
+		log.Debug().
+			Str("appID", appID).
+			Str("guildID", guildID).
+			Str("command", command.Name).
+			Msg("Registering command")
+
 		_, err := s.ApplicationCommandCreate(appID, guildID, command)
 		if err != nil {
 			return err
 		}
 	}
 
-	log.Debug().Msg("Registering utility command handlers...")
+	log.Debug().
+		Interface("commands", commands).
+		Msg("Registering utility command handlers...")
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		handler, ok := commandHandlers[i.ApplicationCommandData().Name]
 		if !ok {

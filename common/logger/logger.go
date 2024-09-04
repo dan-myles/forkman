@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -129,7 +130,25 @@ func Init() {
 		return colorize(fmt.Sprintf("%s", i), timeColor)
 	}
 
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	switch config.GetConfig().AppCfg.LogLevel {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
+
 	log.Logger = log.Output(output)
 	log.Logger = log.With().Caller().Timestamp().Logger()
 }
