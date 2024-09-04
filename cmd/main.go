@@ -15,10 +15,11 @@ func init() {
 	validator.Init()
 	config.Init()
 	logger.Init()
-	sentinel.Init()
 }
 
 func main() {
+	sentinel.New()
+
 	// sentinel.Start()
 	//
 	// // Wait here until q is pressed

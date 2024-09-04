@@ -1,4 +1,4 @@
-package utility
+package test
 
 import (
 	"sync"
@@ -35,12 +35,12 @@ func (u *UtilityModule) Name() string {
 	return "utility"
 }
 
-func (u *UtilityModule) Enable() error {
+func (u *UtilityModule) Enable(s *discordgo.Session) error {
 	log.Info().Msg("Enabled utility module")
 	return nil
 }
 
-func (u *UtilityModule) Disable() error {
+func (u *UtilityModule) Disable(s *discordgo.Session) error {
 	log.Info().Msg("Disabled utility module")
 	return nil
 }
