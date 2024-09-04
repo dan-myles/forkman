@@ -24,11 +24,11 @@ func New() *ModuleManager {
 	return &ModuleManager{}
 }
 
-func (m *ModuleManager) RegisterModule(module Module) {
+func (m *ModuleManager) AddModule(module Module) {
 	m.Modules = append(m.Modules, module)
 }
 
-func (m *ModuleManager) EnableModules(s *discordgo.Session) {
+func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 	log.Info().Msg("Enabling modules...")
 	cfg := config.GetConfig()
 	cfg.RWMutex.RLock()
@@ -91,10 +91,4 @@ func (m *ModuleManager) EnableModules(s *discordgo.Session) {
 			}
 		}
 	}
-}
-
-func (m *ModuleManager) DisableModules() {
-	// for _, module := range m.Modules {
-	// 	module.Disable()
-	// }
 }

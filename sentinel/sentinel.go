@@ -36,9 +36,9 @@ func New() *Sentinel {
 
 		// Register modules
 		moduleManager := &module.ModuleManager{}
-		moduleManager.RegisterModule(&utility.UtilityModule{})
-		moduleManager.RegisterModule(&verification.VerificationModule{})
-		moduleManager.EnableModules(session)
+		moduleManager.AddModule(utility.New())
+		moduleManager.AddModule(verification.New())
+		moduleManager.RegisterModules(session)
 
 		instance = &Sentinel{
 			Session:       session,
