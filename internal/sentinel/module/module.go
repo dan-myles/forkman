@@ -9,9 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// TODO: Currently implements dynamic registration of modules by configuration
-// but needs to implement runtime module enabling/disabling, while updating
-// configuration files concurrently.
+// TODO: start locking in all functions
 
 type Module interface {
 	// NOTE: All modules must implement these methods!
@@ -41,8 +39,8 @@ func (m *ModuleManager) AddModule(module Module) {
 func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 	log.Info().Msg("Enabling modules...")
 	cfg := config.GetConfig()
-	cfg.RWMutex.RLock()
-	defer cfg.RWMutex.RUnlock()
+	cfg.RWMutex.Lock()
+	defer cfg.RWMutex.Unlock()
 
 	// Loop through all modules
 	// Check if the module is enabled in config
@@ -86,6 +84,7 @@ func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 				err := module.Enable(s)
 				if err != nil {
 					log.Error().Err(err).Str("module", module.Name()).Msg("Failed to enable module")
+					break
 				}
 
 				log.Info().Str("module", module.Name()).Msg("Module enabled")
@@ -94,6 +93,7 @@ func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 				err := module.Disable(s)
 				if err != nil {
 					log.Error().Err(err).Str("module", module.Name()).Msg("Failed to disable module")
+					break
 				}
 
 				log.Info().Str("module", module.Name()).Msg("Module disabled")

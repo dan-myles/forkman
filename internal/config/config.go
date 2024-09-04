@@ -124,5 +124,6 @@ func (c *Config) WriteConfig() error {
 		return err
 	}
 
+	log.Debug().Msg("Config written to disk")
 	return nil
 }

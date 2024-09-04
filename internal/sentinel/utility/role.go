@@ -13,5 +13,10 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// Give role to all users
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Role all",
+		},
+	})
 }
