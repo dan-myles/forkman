@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/avvo-na/devil-guard/validator"
+	"github.com/avvo-na/devil-guard/common/validator"
 	"github.com/rs/zerolog/log"
 )
 

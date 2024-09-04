@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/avvo-na/devil-guard/common/logger"
+	"github.com/avvo-na/devil-guard/common/validator"
 	"github.com/avvo-na/devil-guard/config"
-	"github.com/avvo-na/devil-guard/logger"
 	"github.com/avvo-na/devil-guard/sentinel"
-	"github.com/avvo-na/devil-guard/validator"
 	"github.com/rs/zerolog/log"
 )
 
