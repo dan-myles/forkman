@@ -1,6 +1,8 @@
 package utility
 
 import (
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -16,53 +18,87 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// Gather data for logging
+	iid := i.Interaction.ID
+	gid := i.GuildID
+	user_id := i.Member.User.ID
+
+	// Log initial request
+	log.Info().
+		Str("command", "role all").
+		Str("interaction_id", iid).
+		Str("guild_id", gid).
+		Str("user_id", user_id).
+		Msg("Received interaction request")
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "GIVING ROLE TO ALL MEMBERS!",
+			Content: "Testing, not giving roles",
 		},
 	})
 
-	// Get the role
-	options := i.ApplicationCommandData().Options
-	role := options[0].Options[0].RoleValue(s, i.GuildID)
+	// Store members & channel for completion
+	var members []*discordgo.Member
+	done := make(chan struct{}, 1)
 
-	// Set listener for guild members chunk
-	s.AddHandler(func(s *discordgo.Session, i *discordgo.GuildMembersChunk) {
-		log.Debug().Msg("Received guild members chunk!")
-		log.Debug().Msgf("Members: %d", len(i.Members))
+	// Define the handler function
+	remove := s.AddHandler(func(s *discordgo.Session, i *discordgo.GuildMembersChunk) {
+		log.Debug().
+			Str("command", "role all").
+			Str("interaction_id", iid).
+			Str("guild_id", gid).
+			Str("user_id", user_id).
+			Msgf(
+				"Received chunk, Members: %d, chunkIndex: %d, chunkCount: %d",
+				len(i.Members),
+				i.ChunkIndex,
+				i.ChunkCount,
+			)
+		members = append(members, i.Members...) // Store all members from the chunk
 
-		// Loop through all members
-		for _, member := range i.Members {
-			// Add the role to the member
-
-			var found bool
-			for _, r := range member.Roles {
-				if r == role.ID {
-					log.Debug().Str("member", member.User.ID).Str("role", role.ID).Msg("Role already added to member")
-					found = true
-				}
-			}
-			if found {
-				continue
-			}
-
-			err := s.GuildMemberRoleAdd(i.GuildID, member.User.ID, role.ID)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to add role to member")
-				continue
-			}
-
-			log.Debug().Str("member", member.User.ID).Str("role", role.ID).Msg("Role added to member")
+		if i.ChunkIndex+1 == i.ChunkCount {
+			done <- struct{}{} // Signal that we received all chunks
 		}
-
-		log.Info().Msg("Finished chunk processing")
 	})
+
+	// Log request for guild member chunks
+	log.Debug().
+		Str("interaction_id", iid).
+		Str("guild_id", gid).
+		Str("user_id", user_id).
+		Msg("Requesting guild member chunks...")
 
 	// Request chunks to be sent
 	err := s.RequestGuildMembers(i.GuildID, "", 0, "", false)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to request guild members")
+		log.Error().
+			Err(err).
+			Str("command", "role all").
+			Str("interaction_id", iid).
+			Str("guild_id", gid).
+			Str("user_id", user_id).
+			Msg("Failed to request guild member chunks")
 		return
+	}
+
+	// Wait for all chunks to be received
+	select {
+	case <-done:
+		log.Debug().
+			Str("command", "role all").
+			Str("interaction_id", iid).
+			Str("guild_id", gid).
+			Str("user_id", user_id).
+			Msgf("Total members received: %d", len(members))
+		remove()
+	case <-time.After(10 * time.Second): // Adjust the timeout as necessary
+		log.Error().
+			Str("command", "role all").
+			Str("interaction_id", iid).
+			Str("guild_id", gid).
+			Str("user_id", user_id).
+			Msg("Timeout waiting for chunks")
+		remove()
 	}
 }
