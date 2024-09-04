@@ -9,14 +9,22 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// All modules must implement this interface
+// TODO: Currently implements dynamic registration of modules by configuration
+// but needs to implement runtime module enabling/disabling, while updating
+// configuration files concurrently.
+
 type Module interface {
+	// NOTE: All modules must implement these methods!
 	Name() string
 	Enable(s *discordgo.Session) error
 	Disable(s *discordgo.Session) error
 }
 
 type ModuleManager struct {
+	// NOTE: Only ever added to when initializing the bot,
+	// there is no real way to dynamically register a module
+	// that we did not have at build time. This is why we don't
+	// need a lock here.
 	Modules []Module
 }
 
@@ -28,6 +36,8 @@ func (m *ModuleManager) AddModule(module Module) {
 	m.Modules = append(m.Modules, module)
 }
 
+// NOTE: This is where we enable all modules or disable them. This handles
+// registration and removal of modules. Needs to be called once on initalization.
 func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 	log.Info().Msg("Enabling modules...")
 	cfg := config.GetConfig()
@@ -90,5 +100,59 @@ func (m *ModuleManager) RegisterModules(s *discordgo.Session) {
 				break
 			}
 		}
+	}
+}
+
+func (m *ModuleManager) DisableByName(name string, s *discordgo.Session) {
+	// Find our culprit and disable it
+	for _, module := range m.Modules {
+		if strings.EqualFold(module.Name(), name) {
+			err := module.Disable(s)
+			if err != nil {
+				log.Error().Err(err).Str("module", module.Name()).Msg("Failed to disable module")
+			}
+
+			log.Info().Str("module", module.Name()).Msg("Module disabled")
+			break
+		}
+	}
+}
+
+func (m *ModuleManager) DisableAll(s *discordgo.Session) {
+	// Disable all modules
+	for _, module := range m.Modules {
+		err := module.Disable(s)
+		if err != nil {
+			log.Error().Err(err).Str("module", module.Name()).Msg("Failed to disable module")
+		}
+
+		log.Info().Str("module", module.Name()).Msg("Module disabled")
+	}
+}
+
+func (m *ModuleManager) EnableByName(name string, s *discordgo.Session) {
+	// Find our culprit and enable it
+	for _, module := range m.Modules {
+		if strings.EqualFold(module.Name(), name) {
+			err := module.Enable(s)
+			if err != nil {
+				log.Error().Err(err).Str("module", module.Name()).Msg("Failed to enable module")
+			}
+
+			log.Info().Str("module", module.Name()).Msg("Module enabled")
+			break
+		}
+	}
+}
+
+func (m *ModuleManager) EnableAll(s *discordgo.Session) {
+	// Enable all modules
+	for _, module := range m.Modules {
+		err := module.Enable(s)
+		if err != nil {
+			log.Error().Err(err).Str("module", module.Name()).Msg("Failed to enable module")
+		}
+
+		log.Info().Str("module", module.Name()).Msg("Module enabled")
 	}
 }
