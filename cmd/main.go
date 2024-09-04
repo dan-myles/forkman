@@ -3,9 +3,8 @@ package main
 import (
 	"github.com/avvo-na/devil-guard/common/logger"
 	"github.com/avvo-na/devil-guard/common/validator"
-	"github.com/avvo-na/devil-guard/config"
-	"github.com/avvo-na/devil-guard/sentinel"
-	"github.com/rs/zerolog/log"
+	"github.com/avvo-na/devil-guard/internal/config"
+	"github.com/avvo-na/devil-guard/internal/sentinel"
 )
 
 // This function runs before the main entry point
@@ -40,5 +39,4 @@ func main() {
 	// 		os.Exit(0)
 	// 	}
 	// }
-	log.Info().Msg("Hello, World!")
 }

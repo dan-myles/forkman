@@ -3,10 +3,10 @@ package sentinel
 import (
 	"sync"
 
-	"github.com/avvo-na/devil-guard/config"
-	"github.com/avvo-na/devil-guard/sentinel/module"
-	"github.com/avvo-na/devil-guard/sentinel/utility"
-	"github.com/avvo-na/devil-guard/sentinel/verification"
+	"github.com/avvo-na/devil-guard/internal/config"
+	"github.com/avvo-na/devil-guard/internal/sentinel/module"
+	"github.com/avvo-na/devil-guard/internal/sentinel/utility"
+	"github.com/avvo-na/devil-guard/internal/sentinel/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )

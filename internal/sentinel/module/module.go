@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/avvo-na/devil-guard/common/config"
+	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
