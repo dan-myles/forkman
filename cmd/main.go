@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/avvo-na/devil-guard/common/logger"
+	logger "github.com/avvo-na/devil-guard/common/log"
 	"github.com/avvo-na/devil-guard/common/validator"
 	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/avvo-na/devil-guard/internal/sentinel"
