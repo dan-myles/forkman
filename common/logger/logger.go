@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/avvo-na/devil-guard/internal/config"
+	"github.com/avvo-na/devil-guard/config"
 	"github.com/rs/zerolog"
 )
 

@@ -1,7 +1,7 @@
 package sentinel
 
 import (
-	"github.com/avvo-na/devil-guard/internal/config"
+	"github.com/avvo-na/devil-guard/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )

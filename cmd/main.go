@@ -5,9 +5,9 @@ import (
 	"os/signal"
 
 	"github.com/avvo-na/devil-guard/common/logger"
-	"github.com/avvo-na/devil-guard/internal/config"
-	"github.com/avvo-na/devil-guard/internal/sentinel"
-	"github.com/avvo-na/devil-guard/internal/sentinel/utility"
+	"github.com/avvo-na/devil-guard/config"
+	"github.com/avvo-na/devil-guard/sentinel"
+	"github.com/avvo-na/devil-guard/sentinel/utility"
 	"github.com/go-playground/validator/v10"
 )
 
