@@ -4,11 +4,10 @@ import (
 	"os"
 	"os/signal"
 
-	logger "github.com/avvo-na/devil-guard/common/log"
+	"github.com/avvo-na/devil-guard/common/log"
 	"github.com/avvo-na/devil-guard/common/validator"
 	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/avvo-na/devil-guard/internal/sentinel"
-	"github.com/rs/zerolog/log"
 )
 
 // This function runs before the main entry point
@@ -17,7 +16,7 @@ import (
 func init() {
 	validator.Init()
 	config.Init()
-	logger.Init()
+	log.Init()
 }
 
 func main() {

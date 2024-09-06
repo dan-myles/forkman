@@ -34,6 +34,7 @@ func Panic() *zerolog.Event {
 	return log.Panic()
 }
 
+// NOTE: Should only be used in the context of an interaction
 func TraceI(i *discordgo.InteractionCreate) *zerolog.Event {
 	return log.Trace().
 		Str("command", i.ApplicationCommandData().Name).
