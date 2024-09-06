@@ -9,6 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// NOTE:
+// If you are extending the sentinel, make sure to add new module config fields
+// here, and update the defaultCfg, as this is what is written to disk if the
+// sentinel fails to read the config.json file.
+
 type AppConfig struct {
 	DiscordAppID        string `json:"discord_app_id" validate:"required"`
 	DiscordClientID     string `json:"discord_client_id" validate:"required"`
@@ -24,13 +29,13 @@ type UtilityConfig struct {
 	Enabled *bool `json:"enabled" validate:"required"`
 }
 
-type VerificationConfig struct {
+type ModerationConfig struct {
 	Enabled *bool `json:"enabled" validate:"required"`
 }
 
 type ModuleConfig struct {
-	Utility      UtilityConfig      `json:"utility" validate:"required"`
-	Verification VerificationConfig `json:"verification" validate:"required"`
+	Utility    UtilityConfig    `json:"utility" validate:"required"`
+	Moderation ModerationConfig `json:"moderation" validate:"required"`
 }
 
 type Config struct {
@@ -54,9 +59,6 @@ var (
 		},
 		ModuleCfg: ModuleConfig{
 			Utility: UtilityConfig{
-				Enabled: new(bool),
-			},
-			Verification: VerificationConfig{
 				Enabled: new(bool),
 			},
 		},

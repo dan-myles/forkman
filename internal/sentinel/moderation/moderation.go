@@ -1,4 +1,4 @@
-package utility
+package moderation
 
 import (
 	"fmt"
@@ -8,81 +8,21 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var commands = []*discordgo.ApplicationCommand{
-	{
-		Name:        "role",
-		Description: "role management commands",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Name:        "all",
-				Description: "gives role to all members",
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Name:        "role",
-						Description: "to add",
-						Type:        discordgo.ApplicationCommandOptionRole,
-						Required:    true,
-					},
-				},
-			},
-			{
-				Name:        "remove",
-				Description: "removes role from specified member",
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Name:        "member",
-						Description: "to remove role from",
-						Type:        discordgo.ApplicationCommandOptionUser,
-						Required:    true,
-					},
-					{
-						Name:        "role",
-						Description: "to remove",
-						Type:        discordgo.ApplicationCommandOptionRole,
-						Required:    true,
-					},
-				},
-			},
-			{
-				Name:        "add",
-				Description: "adds role to specified member",
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Name:        "member",
-						Description: "to add role to",
-						Type:        discordgo.ApplicationCommandOptionUser,
-						Required:    true,
-					},
-					{
-						Name:        "role",
-						Description: "to add",
-						Type:        discordgo.ApplicationCommandOptionRole,
-						Required:    true,
-					},
-				},
-			},
-		},
-	},
+var commands = []*discordgo.ApplicationCommand{}
+
+var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
+
+type ModerationModule struct{}
+
+func New() *ModerationModule {
+	return &ModerationModule{}
 }
 
-var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"role": role,
-}
-
-type UtilityModule struct{}
-
-func New() *UtilityModule {
-	return &UtilityModule{}
-}
-
-func (u *UtilityModule) Name() string {
+func (u *ModerationModule) Name() string {
 	return "utility"
 }
 
-func (u *UtilityModule) Load(s *discordgo.Session) error {
+func (u *ModerationModule) Load(s *discordgo.Session) error {
 	// Grab the config
 	config := config.GetConfig()
 	config.RWMutex.RLock()
@@ -92,7 +32,7 @@ func (u *UtilityModule) Load(s *discordgo.Session) error {
 	guildID := config.AppCfg.DiscordDevGuildID
 
 	// If the module is disabled, skip registration
-	if !*config.ModuleCfg.Utility.Enabled {
+	if !*config.ModuleCfg.Moderation.Enabled {
 		log.Info().
 			Str("module", u.Name()).
 			Msg("Module is disabled, skipping registration")
@@ -129,7 +69,7 @@ func (u *UtilityModule) Load(s *discordgo.Session) error {
 	return nil
 }
 
-func (u *UtilityModule) Enable(s *discordgo.Session) error {
+func (u *ModerationModule) Enable(s *discordgo.Session) error {
 	// Grab the config
 	config := config.GetConfig()
 	config.RWMutex.Lock()
@@ -181,7 +121,7 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 	return nil
 }
 
-func (u *UtilityModule) Disable(s *discordgo.Session) error {
+func (u *ModerationModule) Disable(s *discordgo.Session) error {
 	// Grab the config
 	config := config.GetConfig()
 	config.RWMutex.Lock()

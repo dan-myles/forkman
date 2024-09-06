@@ -36,57 +36,43 @@ func Panic() *zerolog.Event {
 
 // NOTE: Should only be used in the context of an interaction
 func TraceI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Trace().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Trace(), i)
 }
 
 func DebugI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Debug().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Debug(), i)
 }
 
 func InfoI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Info().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Info(), i)
 }
 
 func WarnI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Warn().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Warn(), i)
 }
 
 func ErrorI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Error().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Error(), i)
 }
 
 func FatalI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Fatal().
-		Str("command", i.ApplicationCommandData().Name).
-		Str("interaction_id", i.Interaction.ID).
-		Str("guild_id", i.GuildID).
-		Str("user_id", i.Member.User.ID)
+	return addInteractionFields(log.Fatal(), i)
 }
 
 func PanicI(i *discordgo.InteractionCreate) *zerolog.Event {
-	return log.Panic().
+	return addInteractionFields(log.Panic(), i)
+}
+
+func addInteractionFields(e *zerolog.Event, i *discordgo.InteractionCreate) *zerolog.Event {
+	handle := e.
 		Str("command", i.ApplicationCommandData().Name).
 		Str("interaction_id", i.Interaction.ID).
 		Str("guild_id", i.GuildID).
 		Str("user_id", i.Member.User.ID)
+
+	if len(i.ApplicationCommandData().Options) > 0 {
+		e.Str("sub_command", i.ApplicationCommandData().Options[0].Name)
+	}
+
+	return handle
 }
