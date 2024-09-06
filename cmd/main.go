@@ -4,35 +4,36 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/avvo-na/devil-guard/common/log"
-	"github.com/avvo-na/devil-guard/common/validator"
+	"github.com/avvo-na/devil-guard/common/logger"
 	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/avvo-na/devil-guard/internal/sentinel"
+	"github.com/avvo-na/devil-guard/internal/sentinel/utility"
+	"github.com/go-playground/validator/v10"
 )
 
-// This function runs before the main entry point
-// No error handling here as if we fail, we can't continue
-// anyway, it is a fatal error.
-func init() {
-	validator.Init()
-	config.Init()
-	log.Init()
-}
-
 func main() {
-	// Start the bot
-	s := sentinel.New()
-	s.Start()
+	// Load our configuration & logger etc.
+	v := validator.New(validator.WithRequiredStructEnabled())
+	cfg := config.New(v)
+	logger := logger.New(cfg)
+	session := sentinel.NewSession(cfg, logger)
 
-	// Wait here until q is pressed
-	log.Info().Msg("Press 'CTRL-C' to exit")
+	// Setup utility module
+	utils := utility.New(session, logger, cfg)
+	err := utils.Load()
+	if err != nil {
+		panic(err)
+	}
 
-	// Wait for ctrl-c to exit
+	// Open a connection to Discord
+	sentinel.StartSession(logger, session)
+	logger.Info().Msg("Bot is now running, press CTRL+C to exit")
+
+	// Wait for a signal to stop the bot
 	defer func() {
-		log.Info().Msg("Stopping bot...")
-		s.Stop()
+		logger.Info().Msg("Stopping bot...")
+		sentinel.StopSession(logger, session)
 	}()
-
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
