@@ -50,11 +50,11 @@ func (m *ModuleManager) AddModule(module Module) {
 
 func (m *ModuleManager) LoadModules(s *discordgo.Session) {
 	// Lock ourself up
-	log.Debug().Msg("Loading modules...")
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	for _, module := range m.modules {
+		log.Debug().Str("module", module.Name()).Msg("Loading module")
 		err := module.Load(s)
 		if err != nil {
 			log.Error().Err(err).Str("module", module.Name()).Msg("Failed to load module")

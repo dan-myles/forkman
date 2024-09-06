@@ -125,7 +125,7 @@ func (u *UtilityModule) Load(s *discordgo.Session) error {
 		handler(s, i)
 	})
 
-	log.Debug().Msg("Utility module registration complete")
+	log.Info().Str("module", u.Name()).Msg("Module loaded successfully")
 	return nil
 }
 
@@ -149,7 +149,8 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 	}
 	log.Debug().
 		Interface("config", config).
-		Msg("Updated utility module config")
+		Str("module", u.Name()).
+		Msg("Updated module config")
 
 	// Register all commands
 	for _, command := range commands {
@@ -157,6 +158,7 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 			Str("appID", appID).
 			Str("guildID", guildID).
 			Str("command", command.Name).
+			Str("module", u.Name()).
 			Msg("Registering command")
 
 		_, err := s.ApplicationCommandCreate(appID, guildID, command)
@@ -167,7 +169,8 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 
 	log.Debug().
 		Interface("commands", commands).
-		Msg("Registering utility command handlers...")
+		Str("module", u.Name()).
+		Msg("Registering command handlers...")
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		handler, ok := commandHandlers[i.ApplicationCommandData().Name]
 		if !ok {
@@ -177,7 +180,7 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 		handler(s, i)
 	})
 
-	log.Debug().Msg("Utility module registration complete")
+	log.Info().Str("module", u.Name()).Msg("Module enable complete")
 	return nil
 }
 
@@ -200,7 +203,9 @@ func (u *UtilityModule) Disable(s *discordgo.Session) error {
 	if err != nil {
 		return fmt.Errorf("Failed to write config: %w", err)
 	}
-	log.Debug().Msg("Updated utility module config")
+	log.Debug().
+		Str("module", u.Name()).
+		Msg("Updated utility module config")
 
 	// Get all registered commands
 	registeredCommands, err := s.ApplicationCommands(appID, guildID)
@@ -209,7 +214,7 @@ func (u *UtilityModule) Disable(s *discordgo.Session) error {
 	}
 
 	// Filter out utility commands
-	log.Debug().Msg("Filtering utility commands for deletion...")
+	log.Debug().Str("module", u.Name()).Msg("Deregistering utility commands")
 	utilCommands := make([]*discordgo.ApplicationCommand, 0)
 	for _, command := range registeredCommands {
 		for _, utilityCommand := range commands {
@@ -220,7 +225,9 @@ func (u *UtilityModule) Disable(s *discordgo.Session) error {
 	}
 
 	// Delete utility commands
-	log.Debug().Msgf("Deleting %d utility commands", len(utilCommands))
+	log.Debug().
+		Str("module", u.Name()).
+		Msgf("Deleting %d utility commands", len(utilCommands))
 	for _, command := range utilCommands {
 		err := s.ApplicationCommandDelete(appID, guildID, command.ID)
 		if err != nil {
@@ -228,6 +235,8 @@ func (u *UtilityModule) Disable(s *discordgo.Session) error {
 		}
 	}
 
-	log.Debug().Msg("Utility module deregistration complete")
+	log.Info().
+		Str("module", u.Name()).
+		Msg("Module disable complete")
 	return nil
 }

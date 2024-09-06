@@ -11,7 +11,7 @@ import (
 var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "kick",
-		Description: "kicks a member from the guild",
+		Description: "kick specified member from the server",
 		Type:        discordgo.ChatApplicationCommand,
 
 		Options: []*discordgo.ApplicationCommandOption{
@@ -61,7 +61,7 @@ func (u *ModerationModule) Load(s *discordgo.Session) error {
 	if !*config.ModuleCfg.Moderation.Enabled {
 		log.Info().
 			Str("module", u.Name()).
-			Msg("Module is disabled, skipping registration")
+			Msg("Moderation is disabled, skipping registration")
 		return nil
 	}
 
@@ -71,6 +71,7 @@ func (u *ModerationModule) Load(s *discordgo.Session) error {
 			Str("appID", appID).
 			Str("guildID", guildID).
 			Str("command", command.Name).
+			Str("module", u.Name()).
 			Msg("Registering command")
 
 		_, err := s.ApplicationCommandCreate(appID, guildID, command)
@@ -81,6 +82,7 @@ func (u *ModerationModule) Load(s *discordgo.Session) error {
 
 	log.Debug().
 		Interface("commands", commands).
+		Str("module", u.Name()).
 		Msg("Registering moderation command handlers...")
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		handler, ok := commandHandlers[i.ApplicationCommandData().Name]
@@ -91,7 +93,7 @@ func (u *ModerationModule) Load(s *discordgo.Session) error {
 		handler(s, i)
 	})
 
-	log.Debug().Msg("Moderation module registration complete")
+	log.Info().Str("module", u.Name()).Msg("Module loaded successfully")
 	return nil
 }
 
@@ -115,6 +117,7 @@ func (u *ModerationModule) Enable(s *discordgo.Session) error {
 	}
 	log.Debug().
 		Interface("config", config).
+		Str("module", u.Name()).
 		Msg("Updated moderation module config")
 
 	// Register all commands
@@ -123,6 +126,7 @@ func (u *ModerationModule) Enable(s *discordgo.Session) error {
 			Str("appID", appID).
 			Str("guildID", guildID).
 			Str("command", command.Name).
+			Str("module", u.Name()).
 			Msg("Registering command")
 
 		_, err := s.ApplicationCommandCreate(appID, guildID, command)
@@ -133,6 +137,7 @@ func (u *ModerationModule) Enable(s *discordgo.Session) error {
 
 	log.Debug().
 		Interface("commands", commands).
+		Str("module", u.Name()).
 		Msg("Registering moderation command handlers...")
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		handler, ok := commandHandlers[i.ApplicationCommandData().Name]
@@ -143,7 +148,9 @@ func (u *ModerationModule) Enable(s *discordgo.Session) error {
 		handler(s, i)
 	})
 
-	log.Debug().Msg("Moderation module registration complete")
+	log.Info().
+		Str("module", u.Name()).
+		Msg("Module enable complete")
 	return nil
 }
 
@@ -166,7 +173,9 @@ func (u *ModerationModule) Disable(s *discordgo.Session) error {
 	if err != nil {
 		return fmt.Errorf("Failed to write config: %w", err)
 	}
-	log.Debug().Msg("Updated moderation module config")
+	log.Debug().
+		Str("module", u.Name()).
+		Msg("Updated moderation module config")
 
 	// Get all registered commands
 	registeredCommands, err := s.ApplicationCommands(appID, guildID)
@@ -175,7 +184,9 @@ func (u *ModerationModule) Disable(s *discordgo.Session) error {
 	}
 
 	// Filter out moderation commands
-	log.Debug().Msg("Filtering moderation commands for deletion...")
+	log.Debug().
+		Str("module", u.Name()).
+		Msg("Filtering moderation commands for deletion...")
 	cmds := make([]*discordgo.ApplicationCommand, 0)
 	for _, globalCmd := range registeredCommands {
 		for _, modCmd := range commands {
@@ -186,7 +197,9 @@ func (u *ModerationModule) Disable(s *discordgo.Session) error {
 	}
 
 	// Delete moderation commands
-	log.Debug().Msgf("Deleting %d moderation commands", len(cmds))
+	log.Debug().
+		Str("module", u.Name()).
+		Msgf("Deleting %d moderation commands", len(cmds))
 	for _, command := range cmds {
 		err := s.ApplicationCommandDelete(appID, guildID, command.ID)
 		if err != nil {
@@ -194,6 +207,8 @@ func (u *ModerationModule) Disable(s *discordgo.Session) error {
 		}
 	}
 
-	log.Debug().Msg("Moderation module deregistration complete")
+	log.Info().
+		Str("module", u.Name()).
+		Msg("Module disable complete")
 	return nil
 }

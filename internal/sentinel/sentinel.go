@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/avvo-na/devil-guard/internal/config"
+	"github.com/avvo-na/devil-guard/internal/sentinel/moderation"
 	"github.com/avvo-na/devil-guard/internal/sentinel/module"
 	"github.com/avvo-na/devil-guard/internal/sentinel/utility"
 	"github.com/bwmarrin/discordgo"
@@ -58,6 +59,7 @@ func New() *Sentinel {
 		log.Debug().Msg("Init module manager...")
 		mm := &module.ModuleManager{}
 		mm.AddModule(utility.New())
+		mm.AddModule(moderation.New())
 		mm.LoadModules(session)
 
 		instance = &Sentinel{
@@ -65,7 +67,7 @@ func New() *Sentinel {
 			ModuleManager: mm,
 		}
 
-		log.Info().Msg("Sentinel initialized, modules registered")
+		log.Info().Msg("Sentinel initialized")
 	})
 
 	return instance
