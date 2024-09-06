@@ -56,13 +56,13 @@ func New() *Sentinel {
 
 		// Register modules
 		log.Debug().Msg("Init module manager...")
-		moduleManager := &module.ModuleManager{}
-		moduleManager.AddModule(utility.New())
-		moduleManager.RegisterModules(session)
+		mm := &module.ModuleManager{}
+		mm.AddModule(utility.New())
+		mm.LoadModules(session)
 
 		instance = &Sentinel{
 			Session:       session,
-			ModuleManager: moduleManager,
+			ModuleManager: mm,
 		}
 
 		log.Info().Msg("Sentinel initialized, modules registered")
@@ -77,6 +77,8 @@ func (s *Sentinel) Start() {
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to open connection to Discord")
 	}
+
+	log.Info().Msg("Sentinel connected")
 }
 
 func (s *Sentinel) Stop() {
@@ -85,4 +87,6 @@ func (s *Sentinel) Stop() {
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to close connection to Discord")
 	}
+
+	log.Info().Msg("Sentinel disconnected")
 }

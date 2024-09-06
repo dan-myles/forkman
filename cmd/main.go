@@ -25,7 +25,6 @@ func main() {
 	s.Start()
 
 	// Wait here until q is pressed
-	log.Info().Msg("Bot is now running!")
 	log.Info().Msg("Press 'CTRL-C' to exit")
 
 	// Wait for ctrl-c to exit

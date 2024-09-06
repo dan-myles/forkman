@@ -9,40 +9,57 @@ import (
 )
 
 type Module interface {
+	// Returns the name of the module
 	Name() string
+
+	// Enables the module, handles any setup and registration
+	// of commands, writes config to file.
 	Enable(s *discordgo.Session) error
+
+	// Disables the module, handles any cleanup and deregistration
+	// of commands, writes config to file.
 	Disable(s *discordgo.Session) error
+
+	// Loads the module, handles any setup and registration of
+	// commands, *reads* config from file. To only be called once
 	Load(s *discordgo.Session) error
 }
 
 type ModuleManager struct {
-	// NOTE: Only ever added to when initializing the bot,
-	// there is no real way to dynamically register a module
-	// that we did not have at build time. This is why we don't
-	// need a lock here.
-	Modules []Module
-	mutex   *sync.RWMutex
+	modules []Module
+	mutex   sync.RWMutex
 }
 
 func New() *ModuleManager {
 	return &ModuleManager{}
 }
 
+// NOTE:
+// All modules should be added to the manager
+// regardless of whether they are enabled or not.
 func (m *ModuleManager) AddModule(module Module) {
-	m.Modules = append(m.Modules, module)
+	// Lock ourself up
+	log.Info().
+		Str("module", module.Name()).
+		Msg("Adding module to be loaded...")
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.modules = append(m.modules, module)
 }
 
-// NOTE: This is where we enable all modules or disable them. This handles
-// registration and removal of modules. Needs to be called once on initalization.
 func (m *ModuleManager) LoadModules(s *discordgo.Session) {
-	log.Info().Msg("Enabling modules...")
-	for _, module := range m.Modules {
+	// Lock ourself up
+	log.Debug().Msg("Loading modules...")
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for _, module := range m.modules {
 		err := module.Load(s)
 		if err != nil {
 			log.Error().Err(err).Str("module", module.Name()).Msg("Failed to load module")
 		}
 	}
-	log.Info().Msg("Modules enabled")
 }
 
 func (m *ModuleManager) DisableByName(name string, s *discordgo.Session) {
@@ -52,7 +69,7 @@ func (m *ModuleManager) DisableByName(name string, s *discordgo.Session) {
 	defer m.mutex.Unlock()
 
 	// Find our culprit and disable it
-	for _, module := range m.Modules {
+	for _, module := range m.modules {
 		if strings.EqualFold(module.Name(), name) {
 			err := module.Disable(s)
 			if err != nil {
@@ -72,7 +89,7 @@ func (m *ModuleManager) EnableByName(name string, s *discordgo.Session) {
 	defer m.mutex.Unlock()
 
 	// Find our culprit and enable it
-	for _, module := range m.Modules {
+	for _, module := range m.modules {
 		if strings.EqualFold(module.Name(), name) {
 			err := module.Enable(s)
 			if err != nil {

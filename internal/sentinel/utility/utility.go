@@ -74,7 +74,9 @@ func (u *UtilityModule) Load(s *discordgo.Session) error {
 
 	// If the module is disabled, skip registration
 	if !*config.ModuleCfg.Utility.Enabled {
-		log.Debug().Msg("Utility module is disabled, skipping...")
+		log.Info().
+			Str("module", u.Name()).
+			Msg("Module is disabled, skipping registration!")
 		return nil
 	}
 
