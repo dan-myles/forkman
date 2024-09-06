@@ -37,23 +37,3 @@ func NewSession(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Sessi
 	log.Info().Msg("Created a new Discord session")
 	return s
 }
-
-func StartSession(log *zerolog.Logger, s *discordgo.Session) {
-	// Open a websocket connection to Discord and begin listening.
-	err := s.Open()
-	if err != nil {
-		log.Panic().Err(err).Msg("Failed to open a connection to Discord")
-	}
-
-	log.Info().Msg("Opened a connection to Discord")
-}
-
-func StopSession(log *zerolog.Logger, s *discordgo.Session) {
-	// Close the connection to Discord
-	err := s.Close()
-	if err != nil {
-		log.Panic().Err(err).Msg("Failed to close the connection to Discord")
-	}
-
-	log.Info().Msg("Closed the connection to Discord")
-}

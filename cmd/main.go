@@ -26,13 +26,17 @@ func main() {
 	}
 
 	// Open a connection to Discord
-	sentinel.StartSession(logger, session)
+	err = session.Open()
+	if err != nil {
+		panic(err)
+	}
 	logger.Info().Msg("Bot is now running, press CTRL+C to exit")
 
 	// Wait for a signal to stop the bot
 	defer func() {
 		logger.Info().Msg("Stopping bot...")
-		sentinel.StopSession(logger, session)
+		session.Close()
+		logger.Info().Msg("Bot has stopped!")
 	}()
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
