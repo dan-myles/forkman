@@ -32,7 +32,8 @@ func New(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Session {
 	}
 
 	// Settings
-	s.Identify.Intents = discordgo.IntentsAll
+	s.Identify.Intents = discordgo.IntentsAll // What do we need permission for?
+	s.SyncEvents = false                      // Launch goroutines for handlers
 
 	log.Info().Msg("Created a new Discord session")
 	return s
