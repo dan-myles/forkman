@@ -10,22 +10,37 @@ import (
 
 var commands = []*discordgo.ApplicationCommand{
 	{
-		Name:        "ping",
-		Description: "Ping the bot",
-	},
-	{
 		Name:        "role",
-		Description: "Manage roles",
+		Description: "role management commands",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Name:        "all",
-				Description: "Give to all users",
+				Description: "gives roles to all members",
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Name:        "role",
-						Description: "Role to give",
+						Description: "role to add",
 						Type:        discordgo.ApplicationCommandOptionRole,
+						Required:    true,
+					},
+				},
+			},
+			{
+				Name:        "remove",
+				Description: "Removes role from specified user",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "role",
+						Description: "role to add",
+						Type:        discordgo.ApplicationCommandOptionRole,
+						Required:    true,
+					},
+					{
+						Name:        "user",
+						Description: "user to remove role from",
+						Type:        discordgo.ApplicationCommandOptionUser,
 						Required:    true,
 					},
 				},
@@ -35,7 +50,6 @@ var commands = []*discordgo.ApplicationCommand{
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"ping": ping,
 	"role": role,
 }
 
@@ -103,15 +117,18 @@ func (u *UtilityModule) Enable(s *discordgo.Session) error {
 }
 
 func (u *UtilityModule) Disable(s *discordgo.Session) error {
+	// Grab the config
 	config := config.GetConfig()
 
 	// Grab the app ID and guild ID
 	appID := config.AppCfg.DiscordAppID
 	guildID := config.AppCfg.DiscordDevGuildID
 
-	// Write new config
+	// Disable the module
 	disable := false
 	config.ModuleCfg.Utility.Enabled = &disable
+
+	// Write new config
 	err := config.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("Failed to write config: %w", err)

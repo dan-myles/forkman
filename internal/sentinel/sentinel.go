@@ -8,7 +8,6 @@ import (
 	"github.com/avvo-na/devil-guard/internal/config"
 	"github.com/avvo-na/devil-guard/internal/sentinel/module"
 	"github.com/avvo-na/devil-guard/internal/sentinel/utility"
-	"github.com/avvo-na/devil-guard/internal/sentinel/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -21,7 +20,6 @@ var (
 type Sentinel struct {
 	Session       *discordgo.Session
 	ModuleManager *module.ModuleManager
-	Mutex         *sync.Mutex
 }
 
 func New() *Sentinel {
@@ -60,13 +58,11 @@ func New() *Sentinel {
 		log.Debug().Msg("Init module manager...")
 		moduleManager := &module.ModuleManager{}
 		moduleManager.AddModule(utility.New())
-		moduleManager.AddModule(verification.New())
 		moduleManager.RegisterModules(session)
 
 		instance = &Sentinel{
 			Session:       session,
 			ModuleManager: moduleManager,
-			Mutex:         &sync.Mutex{},
 		}
 
 		log.Info().Msg("Sentinel initialized, modules registered")

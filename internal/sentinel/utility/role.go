@@ -15,7 +15,26 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Name {
 	case "all":
 		roleAll(s, i)
+	case "remove":
+		roleRemove(s, i)
 	}
+}
+
+func roleRemove(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.InfoI(i).Msg("Interaction request received")
+	options := i.ApplicationCommandData().Options
+	role := options[0].Options[0].RoleValue(s, i.GuildID)
+	if role == nil {
+		log.ErrorI(i).Msg("Role not found")
+		return
+	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseType(discordgo.MessageFlagsEphemeral),
+		Data: &discordgo.InteractionResponseData{
+			Content: "Removing role from member",
+		},
+	})
 }
 
 // TODO: Add a modal for confirmation before giving role to all members
@@ -95,7 +114,8 @@ func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Msg("Failed to give role to member")
 				continue
 			}
-			// remove from map to save memory
+
+			// remove the member from the map
 			delete(memberMap, m.User.ID)
 
 			log.DebugI(i).
