@@ -1,4 +1,4 @@
-package sentinel
+package discord
 
 import (
 	"github.com/avvo-na/devil-guard/config"
@@ -25,7 +25,7 @@ type Module interface {
 	Load() error
 }
 
-func NewSession(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Session {
+func New(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Session {
 	s, err := discordgo.New("Bot " + cfg.GetAppConfig().DiscordBotToken)
 	if err != nil {
 		log.Panic().Err(err).Msg("Failed to create a new Discord session")
