@@ -7,7 +7,6 @@ import (
 	"github.com/avvo-na/devil-guard/common/logger"
 	"github.com/avvo-na/devil-guard/config"
 	"github.com/avvo-na/devil-guard/discord"
-	"github.com/avvo-na/devil-guard/discord/utility"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -16,27 +15,18 @@ func main() {
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New(valid)
 	log := logger.New(cfg)
-	sesh := discord.New(cfg, log)
 
-	// Setup utility module
-	utils := utility.New(sesh, log, cfg)
-	err := utils.Load()
-	if err != nil {
-		panic(err)
-	}
-
-	// Open a connection to Discord
-	err = sesh.Open()
-	if err != nil {
-		panic(err)
-	}
-	log.Info().Msg("Bot is now running, press CTRL+C to exit")
+	// Create a new Discord bot
+	disco := discord.New(cfg, log)
+	disco.Setup()
+	disco.Open()
 
 	// Wait for a signal to stop the bot
+	log.Info().Msg("Bot started 🔥, press CTRL+C to shutdown.")
 	defer func() {
 		log.Info().Msg("Stopping bot...")
-		sesh.Close()
-		log.Info().Msg("Bot has stopped!")
+		disco.Close()
+		log.Info().Msg("Bot stopped :D")
 	}()
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

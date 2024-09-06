@@ -2,11 +2,10 @@ package discord
 
 import (
 	"github.com/avvo-na/devil-guard/config"
+	"github.com/avvo-na/devil-guard/discord/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )
-
-// TODO: Probably dont panic so much
 
 type Module interface {
 	// Returns the name of the module
@@ -25,10 +24,17 @@ type Module interface {
 	Load() error
 }
 
-func New(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Session {
+type Discord struct {
+	session *discordgo.Session
+	log     *zerolog.Logger
+	cfg     *config.ConfigManager
+}
+
+// TODO: Probably dont panic :P or maybe we should? idk im tired 💀
+func New(cfg *config.ConfigManager, log *zerolog.Logger) *Discord {
 	s, err := discordgo.New("Bot " + cfg.GetAppConfig().DiscordBotToken)
 	if err != nil {
-		log.Panic().Err(err).Msg("Failed to create a new Discord session")
+		panic(err)
 	}
 
 	// Settings
@@ -36,5 +42,47 @@ func New(cfg *config.ConfigManager, log *zerolog.Logger) *discordgo.Session {
 	s.SyncEvents = false                      // Launch goroutines for handlers
 
 	log.Info().Msg("Created a new Discord session")
-	return s
+	return &Discord{
+		session: s,
+		log:     log,
+		cfg:     cfg,
+	}
+}
+
+// Only to be called once, i mean it 😎
+func (d *Discord) Setup() {
+	// Register all modules
+	modules := []Module{
+		utility.New(d.session, d.log, d.cfg),
+	}
+
+	// Load em up 🤠
+	for _, module := range modules {
+		err := module.Load()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	d.log.Info().Msg("All modules loaded")
+}
+
+func (d *Discord) Open() error {
+	err := d.session.Open()
+	if err != nil {
+		return err
+	}
+
+	d.log.Info().Msg("Opened a connection to Discord")
+	return nil
+}
+
+func (d *Discord) Close() error {
+	err := d.session.Close()
+	if err != nil {
+		return err
+	}
+
+	d.log.Info().Msg("Closed the connection to Discord")
+	return nil
 }

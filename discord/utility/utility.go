@@ -132,3 +132,11 @@ func (u *UtilityModule) Load() error {
 	u.log.Info().Msg("Module loaded successfully")
 	return nil
 }
+
+func (u *UtilityModule) Enable() error {
+	return nil
+}
+
+func (u *UtilityModule) Disable() error {
+	return nil
+}
