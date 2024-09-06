@@ -20,6 +20,18 @@ throw [INESRT BOT NAME] on a server of your choice and forget about it.
 *Features*
 - None yet lol
 
+## Roadmap
+
+*To-Do
+- web dashboard
+- client-server sync for realtime updates on commands to dashboard
+- aggregate logs & open rest endpoint to collect them
+- integrate sqlite
+- setup case system for moderation actions
+- extend base commands
+- roll up a good ol' auth system (session based 🙅 no jwts)
+
+
 ## Contributions
 If you want to contribute to the project, feel free to open pull-requests. If there
 is something that you want assistance with or have a bug to report, please open an
