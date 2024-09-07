@@ -66,7 +66,13 @@ var commands = []*discordgo.ApplicationCommand{
 	},
 }
 
-var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
+var commandHandlers = map[string]func(
+	s *discordgo.Session,
+	i *discordgo.InteractionCreate,
+	l *zerolog.Logger,
+){
+	"role": role,
+}
 
 type UtilityModule struct {
 	session *discordgo.Session
@@ -125,8 +131,7 @@ func (u *UtilityModule) Load() error {
 		if !ok {
 			return
 		}
-
-		handler(s, i)
+		handler(s, i, u.log)
 	})
 
 	u.log.Info().Msg("Module loaded successfully")

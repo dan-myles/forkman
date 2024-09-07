@@ -33,5 +33,6 @@ throw [INESRT BOT NAME] on a server of your choice and forget about it.
 
 **TODO:**
 - pick web router (stdlib/echo/chi?)
+- add graphite to repo for easy PRs
 
 

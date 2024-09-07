@@ -1,77 +1,69 @@
 package utility
 
-// import (
-// 	"fmt"
-// 	"time"
-//
-// 	"github.com/avvo-na/devil-guard/internal/sentinel/templates"
-// 	"github.com/bwmarrin/discordgo"
-// )
-//
-// // Top level handler for all role commands
-// func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
-// 	options := i.ApplicationCommandData().Options
-//
-// 	switch options[0].Name {
-// 	case "all":
-// 		roleAll(s, i)
-// 	case "remove":
-// 		roleRemove(s, i)
-// 	case "add":
-// 		roleAdd(s, i)
-// 	}
-// }
-//
-// func roleAdd(s *discordgo.Session, i *discordgo.InteractionCreate) {
-// 	log.InfoI(i).Msg("Interaction request received")
-// 	options := i.ApplicationCommandData().Options
-//
-// 	// Grab user
-// 	user := options[0].Options[0].UserValue(s)
-// 	if user == nil {
-// 		templates.ErrMessageEphemeral(s, i, fmt.Errorf("User not found"))
-// 		log.ErrorI(i).Err(fmt.Errorf("User not found")).Msg("Interaction request failed")
-// 		return
-// 	}
-//
-// 	// Grab role
-// 	role := options[0].Options[1].RoleValue(s, i.GuildID)
-// 	if role == nil {
-// 		templates.ErrMessageEphemeral(s, i, fmt.Errorf("Role not found"))
-// 		log.ErrorI(i).Err(fmt.Errorf("Role not found")).Msg("Interaction request failed")
-// 		return
-// 	}
-//
-// 	// Get member value
-// 	// Member and User are different in DiscordGo
-// 	member, err := s.GuildMember(i.GuildID, user.ID)
-// 	if err != nil {
-// 		templates.ErrMessageEphemeral(s, i, err)
-// 		log.ErrorI(i).Err(err).Msg("Interaction request failed")
-// 		return
-// 	}
-//
-// 	// Check the if the member already has the role
-// 	for _, r := range member.Roles {
-// 		if role.ID == r {
-// 			templates.ErrMessageEphemeral(s, i, fmt.Errorf("User already has the role"))
-// 			log.InfoI(i).Msg("Interaction request completed")
-// 			return
-// 		}
-// 	}
-//
-// 	// Add role to member
-// 	err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
-// 	if err != nil {
-// 		templates.ErrMessageEphemeral(s, i, err)
-// 		log.ErrorI(i).Err(err).Msg("Interaction request failed")
-// 		return
-// 	}
-//
-// 	templates.MessageEphemeral(s, i, "Added role to user!")
-// 	log.InfoI(i).Msg("Interaction request completed")
-// }
-//
+import (
+	"fmt"
+
+	"github.com/avvo-na/devil-guard/discord/templates"
+	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog"
+)
+
+// Top level handler for all role commands
+func role(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Logger) {
+	options := i.ApplicationCommandData().Options
+
+	switch options[0].Name {
+	case "all":
+		// roleAll(s, i)
+	case "remove":
+		// roleRemove(s, i)
+	case "add":
+		roleAdd(s, i, l)
+	}
+}
+
+func roleAdd(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Logger) {
+	log := l.With().
+		Str("command", "role add").
+		Str("interaction_id", i.ID).
+		Str("guild_id", i.GuildID).
+		Str("user_id", i.Member.User.ID).
+		Str("channel_id", i.ChannelID).
+		Logger()
+
+	// Grab options
+	options := i.ApplicationCommandData().Options
+
+	// Grab role & member
+	member := i.Member
+	role := options[0].Options[1].RoleValue(s, i.GuildID)
+	if role == nil {
+		templates.ErrMessageEphemeral(s, i, fmt.Errorf("Role not found"))
+		log.Error().Err(fmt.Errorf("Role not found")).Msg("Interaction request failed")
+		return
+	}
+
+	// Check the if the member already has the role
+	for _, r := range member.Roles {
+		if role.ID == r {
+			templates.ErrMessageEphemeral(s, i, fmt.Errorf("User already has the role"))
+			log.Info().Msg("Interaction request completed")
+			return
+		}
+	}
+
+	// Add role to member
+	err := s.GuildMemberRoleAdd(i.GuildID, member.User.ID, role.ID)
+	if err != nil {
+		templates.ErrMessageEphemeral(s, i, err)
+		log.Error().Err(err).Msg("Interaction request failed")
+		return
+	}
+
+	templates.MessageEphemeral(s, i, "Added role to user!")
+	log.Info().Msg("Interaction request completed")
+}
+
 // func roleRemove(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // 	log.InfoI(i).Msg("Interaction request received")
 // 	options := i.ApplicationCommandData().Options
