@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avvo-na/devil-guard/discord/templates"
+	"github.com/avvo-na/forkman/discord/templates"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )

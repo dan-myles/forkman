@@ -1,4 +1,4 @@
-module github.com/avvo-na/devil-guard
+module github.com/avvo-na/forkman
 
 go 1.23.0
 

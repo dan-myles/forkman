@@ -1,8 +1,8 @@
 package discord
 
 import (
-	"github.com/avvo-na/devil-guard/config"
-	"github.com/avvo-na/devil-guard/discord/utility"
+	"github.com/avvo-na/forkman/config"
+	"github.com/avvo-na/forkman/discord/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )

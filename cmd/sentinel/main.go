@@ -4,9 +4,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/avvo-na/devil-guard/common/logger"
-	"github.com/avvo-na/devil-guard/config"
-	"github.com/avvo-na/devil-guard/discord"
+	"github.com/avvo-na/forkman/common/logger"
+	"github.com/avvo-na/forkman/config"
+	"github.com/avvo-na/forkman/discord"
 	"github.com/go-playground/validator/v10"
 )
 

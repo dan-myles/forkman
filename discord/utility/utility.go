@@ -1,7 +1,7 @@
 package utility
 
 import (
-	"github.com/avvo-na/devil-guard/config"
+	"github.com/avvo-na/forkman/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )
