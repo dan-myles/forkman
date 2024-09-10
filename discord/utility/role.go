@@ -151,12 +151,16 @@ func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Lo
 		return
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Giving role to all members...",
 		},
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to respond to interaction")
+		return
+	}
 
 	// Store members & channel for completion
 	memberMap := make(map[string]*discordgo.Member)
@@ -174,7 +178,7 @@ func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Lo
 	})
 
 	// Request chunks to be sent
-	err := s.RequestGuildMembers(i.GuildID, "", 0, "", false)
+	err = s.RequestGuildMembers(i.GuildID, "", 0, "", false)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to request guild member chunks")
 		return
@@ -226,14 +230,18 @@ func roleAll(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Lo
 
 			// every 100 members, log the progress
 			if len(memberMap)%100 == 0 {
-				s.ChannelMessageSend(
+				_, err := s.ChannelMessageSend(
 					i.ChannelID,
 					fmt.Sprintf("%d members left to process", len(memberMap)),
 				)
+				log.Error().Err(err).Msg("Sent progress message")
 			}
 		}
 
-		s.ChannelMessageSend(i.ChannelID, "Role given to all members!!")
+		_, err = s.ChannelMessageSend(i.ChannelID, "Role given to all members!!")
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to send completion message")
+		}
 
 		log.Info().Msg("Interaction request completed")
 		remove()
