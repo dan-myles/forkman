@@ -26,13 +26,23 @@ throw Forkman on a server of your choice and forget about it.
 - web dashboard
 - client-server sync for realtime updates on commands to dashboard
 - aggregate logs & open rest endpoint to collect them
-- integrate sqlite
 - setup case system for moderation actions
 - extend base commands
 - roll up a good ol' auth system (session based 🙅 no jwts)
+- backup system (with some sort of zip file like pocketbase)
 
 **TODO:**
-- pick web router (stdlib/echo/chi?)
-- add graphite to repo for easy PRs
+- [x] pick web router (stdlib/echo/chi?)
+- [ ] setup dev script for hot-reloading vite & go
+- [ ] add graphite to repo for easy PRs
+- [ ] move from config.json to env variables
+- [ ] store module state separately from env vars (prob still json?)
+- [ ] move to github issues instead of this todo-list lol
+- [ ] pick db (prob just sqlite!)
+- [ ] write a dockerfile that binds a volume to preserve DB state (need to store all state in some folder)
 
+## Deps
+- go
+- air
+- pnpm
 

@@ -1,3 +1,23 @@
 # protect secrets
 config.json
-modules.json
+.env
+.env*.local
+.env*.production
+
+# ignore build directory
+tmp/
+build/
+
+# Logs
+*.log
+
+# editor configs
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
