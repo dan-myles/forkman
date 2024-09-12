@@ -86,3 +86,8 @@ func (d *Discord) Close() error {
 	d.log.Info().Msg("Closed the connection to Discord")
 	return nil
 }
+
+func (d *Discord) GetSession() *discordgo.Session {
+	d.log.Debug().Msg("Returning the Discord session")
+	return d.session
+}
