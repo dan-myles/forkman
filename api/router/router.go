@@ -21,7 +21,7 @@ func New(l *zerolog.Logger, v *validator.Validate, d *discord.Discord) *chi.Mux 
 	r.Use(chiMiddleware.RequestID)
 
 	// Health check :P
-	r.Get("/api/health", h.Health)
+	r.Get("/health", h.Health)
 
 	return r
 }
