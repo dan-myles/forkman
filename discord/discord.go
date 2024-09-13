@@ -27,12 +27,12 @@ type Module interface {
 type Discord struct {
 	session *discordgo.Session
 	log     *zerolog.Logger
-	cfg     *config.ConfigManager
+	cfg     *config.Config
 }
 
 // TODO: Probably dont panic :P or maybe we should? idk im tired 💀
-func New(cfg *config.ConfigManager, log *zerolog.Logger) *Discord {
-	s, err := discordgo.New("Bot " + cfg.GetAppConfig().DiscordBotToken)
+func New(cfg *config.Config, log *zerolog.Logger) *Discord {
+	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
 	if err != nil {
 		panic(err)
 	}
