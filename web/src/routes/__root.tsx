@@ -1,6 +1,6 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@/components/tanstack-router-devtools";
-import React from "react";
+import React from "react"
+import { Outlet, createRootRoute } from "@tanstack/react-router"
+import { TanStackRouterDevtools } from "@/components/tanstack-router-devtools"
 
 export const Route = createRootRoute({
   component: () => (
@@ -11,4 +11,4 @@ export const Route = createRootRoute({
       </React.Suspense>
     </>
   ),
-});
+})

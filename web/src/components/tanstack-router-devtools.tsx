@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 
 export const TanStackRouterDevtools =
   process.env.NODE_ENV === "production"
@@ -9,5 +9,5 @@ export const TanStackRouterDevtools =
           default: res.TanStackRouterDevtools,
           // For Embedded Mode
           // default: res.TanStackRouterDevtoolsPanel
-        })),
-      );
+        }))
+      )
