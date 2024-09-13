@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// Init new http server :D
-	r := router.New(log, valid, disco)
+	r := router.New(log, valid, disco, cfg.GoEnv)
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
 		Handler: r,
