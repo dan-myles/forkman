@@ -34,8 +34,11 @@ func main() {
 	// Init new http server :D
 	r := router.New(log, valid, disco, cfg.GoEnv)
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
-		Handler: r,
+		Addr:         fmt.Sprintf(":%d", cfg.ServerPort),
+		Handler:      r,
+		ReadTimeout:  cfg.ServerTimeoutRead,
+		WriteTimeout: cfg.ServerTimeoutWrite,
+		IdleTimeout:  cfg.ServerTimeoutIdle,
 	}
 
 	// Wait for sigterm (Ctrl+C)
