@@ -34,8 +34,6 @@ throw Forkman on a server of your choice and forget about it.
 **TODO:**
 - [x] pick web router (stdlib/echo/chi?)
 - [ ] setup dev script for hot-reloading vite & go
-- [ ] add graphite to repo for easy PRs
-- [ ] move from config.json to env variables
 - [ ] store module state separately from env vars (prob still json?)
 - [ ] move to github issues instead of this todo-list lol
 - [ ] pick db (prob just sqlite!)
