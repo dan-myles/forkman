@@ -6,24 +6,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/avvo-na/forkman/config"
 	"github.com/rs/zerolog"
 )
 
-func New(c *config.ConfigManager) *zerolog.Logger {
-	cfg := c.GetAppConfig()
-
-	switch cfg.Environment {
-	case "dev":
-		return dev(cfg)
-	case "prod":
-		return prod(cfg)
+func New(goEnv string) *zerolog.Logger {
+	switch goEnv {
+	case "development":
+		return dev(goEnv)
+	case "production":
+		return prod(goEnv)
 	default:
 		panic("Unknown environment, please check your configuration file")
 	}
 }
 
-func dev(c config.AppConfig) *zerolog.Logger {
+func dev(goEnv string) *zerolog.Logger {
 	// Default to console output
 	output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	output.NoColor = false
@@ -95,32 +92,12 @@ func dev(c config.AppConfig) *zerolog.Logger {
 	}
 
 	// Initialize the logger
-	logger := zerolog.New(output).With().Timestamp().Caller().Logger()
-
-	// Add the level
-	switch c.LogLevel {
-	case "trace":
-		logger = logger.Level(zerolog.TraceLevel)
-	case "debug":
-		logger = logger.Level(zerolog.DebugLevel)
-	case "info":
-		logger = logger.Level(zerolog.InfoLevel)
-	case "warn":
-		logger = logger.Level(zerolog.WarnLevel)
-	case "error":
-		logger = logger.Level(zerolog.ErrorLevel)
-	case "fatal":
-		logger = logger.Level(zerolog.FatalLevel)
-	case "panic":
-		logger = logger.Level(zerolog.PanicLevel)
-	default:
-		logger = logger.Level(zerolog.InfoLevel)
-	}
+	logger := zerolog.New(output).With().Timestamp().Caller().Logger().Level(zerolog.DebugLevel)
 
 	return &logger
 }
 
 // TODO: impl production logger, will just be json output
-func prod(c config.AppConfig) *zerolog.Logger {
+func prod(goEnv string) *zerolog.Logger {
 	return nil
 }

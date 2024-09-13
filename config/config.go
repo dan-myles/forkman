@@ -1,168 +1,37 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"sync"
+	"time"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
-
-type AppConfig struct {
-	DiscordAppID        string `json:"discord_app_id"        validate:"required"`
-	DiscordClientID     string `json:"discord_client_id"     validate:"required"`
-	DiscordClientSecret string `json:"discord_client_secret" validate:"required"`
-	DiscordBotToken     string `json:"discord_bot_token"     validate:"required"`
-	DiscordDevGuildID   string `json:"discord_dev_guild_id"  validate:"required"`
-	DiscordOwnerID      string `json:"discord_owner_id"      validate:"required"`
-	LogLevel            string `json:"log_level"             validate:"required"`
-	Environment         string `json:"environment"           validate:"required"`
-}
-
-type UtilityConfig struct {
-	Enabled *bool `json:"enabled" validate:"required"`
-}
-
-type ModerationConfig struct {
-	Enabled *bool `json:"enabled" validate:"required"`
-}
-
-type ModuleConfig struct {
-	Utility    UtilityConfig    `json:"utility"    validate:"required"`
-	Moderation ModerationConfig `json:"moderation" validate:"required"`
-}
 
 type Config struct {
-	AppCfg    AppConfig    `json:"app"     validate:"required"`
-	ModuleCfg ModuleConfig `json:"modules" validate:"required"`
+	DiscordAppID        string        `env:"DISCORD_APP_ID,required,notEmpty"`
+	DiscordClientID     string        `env:"DISCORD_CLIENT_ID,required,notEmpty"`
+	DiscordClientSecret string        `env:"DISCORD_CLIENT_SECRET,required,notEmpty"`
+	DiscordBotToken     string        `env:"DISCORD_BOT_TOKEN,required,notEmpty"`
+	DiscordDevGuildID   string        `env:"DISCORD_DEV_GUILD_ID,required,notEmpty"`
+	DiscordOwnerID      string        `env:"DISCORD_OWNER_ID,required,notEmpty"`
+	ServerPort          int           `env:"SERVER_PORT,required,notEmpty"`
+	ServerTimeoutRead   time.Duration `env:"SERVER_TIMEOUT_READ,required,notEmpty"`
+	ServerTimeoutWrite  time.Duration `env:"SERVER_TIMEOUT_WRITE,required,notEmpty"`
+	ServerTimeoutIdle   time.Duration `env:"SERVER_TIMEOUT_IDLE,required,notEmpty"`
+	LogLevel            string        `env:"LOG_LEVEL,required,notEmpty"`
+	GoEnv               string        `env:"GO_ENV,required,notEmpty"`
 }
 
-type ConfigManager struct {
-	cfg *Config
-	mtx *sync.RWMutex
-	val *validator.Validate
-}
-
-// NOTE: Used to generate a default config file,
-// only happens if the config file is not found.
-var (
-	defaultCfg = Config{
-		AppCfg: AppConfig{
-			DiscordAppID:        "",
-			DiscordClientID:     "",
-			DiscordClientSecret: "",
-			DiscordBotToken:     "",
-			DiscordDevGuildID:   "",
-			DiscordOwnerID:      "",
-			LogLevel:            "info",
-			Environment:         "dev",
-		},
-		ModuleCfg: ModuleConfig{
-			Utility: UtilityConfig{
-				Enabled: new(bool),
-			},
-			Moderation: ModerationConfig{
-				Enabled: new(bool),
-			},
-		},
-	}
-)
-
-func New(v *validator.Validate) *ConfigManager {
-	file, err := os.Open("config.json")
-	if err != nil {
-		// Generate a new config file
-		file, err := os.Create("config.json")
-		if err != nil {
-			panic(err)
-		}
-		// Write the JSON to the file
-		enc := json.NewEncoder(file)
-		enc.SetIndent("", "  ")
-		enc.Encode(defaultCfg)
-
-		// Close the file
-		file.Close()
-		panic(
-			"Config file not found, one has been generated, please fill it out and restart the bot",
-		)
-	}
-
-	// Load the config file
-	cfg := Config{}
-	decoder := json.NewDecoder(file)
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&cfg)
+func New() *Config {
+	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	// Validate the config
-	err = v.Struct(&cfg)
+	cfg, err := env.ParseAs[Config]()
 	if err != nil {
 		panic(err)
 	}
 
-	return &ConfigManager{
-		cfg: &cfg,
-		mtx: &sync.RWMutex{},
-		val: v,
-	}
-}
-
-func (c *ConfigManager) GetAppConfig() AppConfig {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
-	return c.cfg.AppCfg
-}
-
-func (c *ConfigManager) GetModuleConfig() ModuleConfig {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
-	return c.cfg.ModuleCfg
-}
-
-func (c *ConfigManager) WriteModerationConfig(cfg ModerationConfig) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.cfg.ModuleCfg.Moderation = cfg
-
-	file, err := os.Create("config.json")
-	if err != nil {
-		return fmt.Errorf("failed to open config file: %w", err)
-	}
-
-	enc := json.NewEncoder(file)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(c.cfg)
-	if err != nil {
-		return fmt.Errorf("failed to encode config: %w", err)
-	}
-
-	return nil
-}
-
-func (c *ConfigManager) WriteUtilityConfig(cfg UtilityConfig) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.cfg.ModuleCfg.Utility = cfg
-
-	file, err := os.Create("config.json")
-	if err != nil {
-		return fmt.Errorf("failed to open config file: %w", err)
-	}
-
-	enc := json.NewEncoder(file)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(c.cfg)
-	if err != nil {
-		return fmt.Errorf("failed to encode config: %w", err)
-	}
-
-	return nil
+	return &cfg
 }

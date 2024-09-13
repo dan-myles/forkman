@@ -9,10 +9,10 @@ import (
 type UtilityModule struct {
 	session *discordgo.Session
 	log     *zerolog.Logger
-	cfg     *config.ConfigManager
+	cfg     *config.Config
 }
 
-func New(s *discordgo.Session, l *zerolog.Logger, c *config.ConfigManager) *UtilityModule {
+func New(s *discordgo.Session, l *zerolog.Logger, c *config.Config) *UtilityModule {
 	subLogger := l.With().Str("module", "utility").Logger()
 
 	return &UtilityModule{
@@ -27,27 +27,17 @@ func (u *UtilityModule) Name() string {
 }
 
 func (u *UtilityModule) Load() error {
-	// Grab the config
-	appCfg := u.cfg.GetAppConfig()
-	moduleCfg := u.cfg.GetModuleConfig()
-
-	// If the module is disabled, skip registration
-	if !*moduleCfg.Utility.Enabled {
-		u.log.Info().Msg("Module is disabled, skipping registration")
-		return nil
-	}
-
 	// Register all commands
 	for _, command := range commands {
 		u.log.Debug().
-			Str("appID", appCfg.DiscordAppID).
-			Str("guildID", appCfg.DiscordDevGuildID).
+			Str("appID", u.cfg.DiscordAppID).
+			Str("guildID", u.cfg.DiscordDevGuildID).
 			Str("command", command.Name).
 			Msg("Registering command")
 
 		_, err := u.session.ApplicationCommandCreate(
-			appCfg.DiscordAppID,
-			appCfg.DiscordDevGuildID,
+			u.cfg.DiscordAppID,
+			u.cfg.DiscordDevGuildID,
 			command,
 		)
 		if err != nil {

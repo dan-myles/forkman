@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,8 +19,8 @@ import (
 func main() {
 	// Main deps for application
 	valid := validator.New(validator.WithRequiredStructEnabled())
-	cfg := config.New(valid)
-	log := logger.New(cfg)
+	cfg := config.New()
+	log := logger.New(cfg.GoEnv)
 
 	// Create a new Discord bot
 	disco := discord.New(cfg, log)
@@ -33,11 +34,11 @@ func main() {
 	// Init new http server :D
 	r := router.New(log, valid, disco)
 	s := &http.Server{
-		Addr:    ":8080", // TODO: Make this configurable
+		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
 		Handler: r,
 	}
 
-	// Wait for CTRL+C (sigterm)
+	// Wait for sigterm (Ctrl+C)
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
