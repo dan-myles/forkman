@@ -1,0 +1,17 @@
+.env.example
+.eslintignore
+.git/
+.github/
+.next/
+.prettierignore
+bun.lockb
+package-lock.json
+drizzle/
+node_modules/
+public/
+.vscode/
+.vercel/
+supabase/
+README.md
+pnpm-lock.yaml
+src/routeTree.gen.ts
