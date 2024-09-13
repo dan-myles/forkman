@@ -2,20 +2,26 @@ package config
 
 import (
 	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DiscordAppID        string `env:"DISCORD_APP_ID required"`
-	DiscordClientID     string `env:"DISCORD_CLIENT_ID required"`
-	DiscordClientSecret string `env:"DISCORD_CLIENT_SECRET required"`
-	DiscordBotToken     string `env:"DISCORD_BOT_TOKEN required"`
-	DiscordDevGuildID   string `env:"DISCORD_DEV_GUILD_ID required"`
-	DiscordOwnerID      string `env:"DISCORD_OWNER_ID required"`
-	LogLevel            string `env:"LOG_LEVEL default=info"`
-	GoEnv               string `env:"GO_ENV default=development"`
+	DiscordAppID        string `env:"DISCORD_APP_ID,required,notEmpty"`
+	DiscordClientID     string `env:"DISCORD_CLIENT_ID,required,notEmpty"`
+	DiscordClientSecret string `env:"DISCORD_CLIENT_SECRET,required,notEmpty"`
+	DiscordBotToken     string `env:"DISCORD_BOT_TOKEN,required,notEmpty"`
+	DiscordDevGuildID   string `env:"DISCORD_DEV_GUILD_ID,required,notEmpty"`
+	DiscordOwnerID      string `env:"DISCORD_OWNER_ID,required,notEmpty"`
+	LogLevel            string `env:"LOG_LEVEL,required,notEmpty"`
+	GoEnv               string `env:"GO_ENV,required,notEmpty"`
 }
 
 func New() *Config {
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	cfg, err := env.ParseAs[Config]()
 	if err != nil {
 		panic(err)
