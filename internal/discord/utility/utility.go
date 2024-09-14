@@ -1,7 +1,7 @@
 package utility
 
 import (
-	"github.com/avvo-na/forkman/config"
+	"github.com/avvo-na/forkman/common/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )
@@ -9,10 +9,10 @@ import (
 type UtilityModule struct {
 	session *discordgo.Session
 	log     *zerolog.Logger
-	cfg     *config.Config
+	cfg     *config.SentinelConfig
 }
 
-func New(s *discordgo.Session, l *zerolog.Logger, c *config.Config) *UtilityModule {
+func New(s *discordgo.Session, l *zerolog.Logger, c *config.SentinelConfig) *UtilityModule {
 	subLogger := l.With().Str("module", "utility").Logger()
 
 	return &UtilityModule{

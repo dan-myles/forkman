@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/avvo-na/forkman/api/router"
+	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/common/logger"
-	"github.com/avvo-na/forkman/config"
-	"github.com/avvo-na/forkman/discord"
+	"github.com/avvo-na/forkman/internal/discord"
+	"github.com/avvo-na/forkman/internal/server"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -23,23 +22,16 @@ func main() {
 	log := logger.New(cfg.GoEnv)
 
 	// Create a new Discord bot
-	disco := discord.New(cfg, log)
-	disco.Setup()
-	err := disco.Open()
-	defer disco.Close()
+	discord := discord.New(cfg, log)
+	discord.Setup()
+	err := discord.Open()
+	defer discord.Close()
 	if err != nil {
 		panic(err)
 	}
 
 	// Init new http server :D
-	r := router.New(log, valid, disco, cfg.GoEnv)
-	s := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.ServerPort),
-		Handler:      r,
-		ReadTimeout:  cfg.ServerTimeoutRead,
-		WriteTimeout: cfg.ServerTimeoutWrite,
-		IdleTimeout:  cfg.ServerTimeoutIdle,
-	}
+	server := server.New(cfg, log, valid, discord)
 
 	// Wait for sigterm (Ctrl+C)
 	closed := make(chan struct{})
@@ -48,7 +40,7 @@ func main() {
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
 
-		log.Info().Msgf("Shutting down server %v", s.Addr)
+		log.Info().Msgf("Shutting down server %v", server.Addr)
 
 		ctx, cancel := context.WithTimeout(
 			context.Background(),
@@ -56,7 +48,7 @@ func main() {
 		)
 		defer cancel()
 
-		if err := s.Shutdown(ctx); err != nil {
+		if err := server.Shutdown(ctx); err != nil {
 			log.Error().Err(err).Msg("Server shutdown failure!")
 		}
 
@@ -65,9 +57,9 @@ func main() {
 		close(closed)
 	}()
 
-	log.Info().Msgf("Starting server %v", s.Addr)
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal().Err(err).Msg("Server startup failure")
+	log.Info().Msgf("Starting server %v", server.Addr)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Panic().Err(err).Msg("Server startup failure")
 	}
 
 	<-closed

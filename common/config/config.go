@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+type SentinelConfig struct {
 	DiscordAppID        string        `env:"DISCORD_APP_ID,required,notEmpty"`
 	DiscordClientID     string        `env:"DISCORD_CLIENT_ID,required,notEmpty"`
 	DiscordClientSecret string        `env:"DISCORD_CLIENT_SECRET,required,notEmpty"`
@@ -22,13 +22,13 @@ type Config struct {
 	GoEnv               string        `env:"GO_ENV,required,notEmpty"`
 }
 
-func New() *Config {
+func New() *SentinelConfig {
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	cfg, err := env.ParseAs[Config]()
+	cfg, err := env.ParseAs[SentinelConfig]()
 	if err != nil {
 		panic(err)
 	}
