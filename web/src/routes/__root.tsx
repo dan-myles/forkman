@@ -1,13 +1,16 @@
 import React from "react"
 import { Outlet, createRootRoute } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@/components/tanstack-router-devtools"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const Route = createRootRoute({
   component: () => (
     <>
-      <Outlet />
+      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+        <Outlet />
+      </ThemeProvider>
       <React.Suspense>
-        <TanStackRouterDevtools />
+        <TanStackRouterDevtools initialIsOpen={false} position="bottom-right" />
       </React.Suspense>
     </>
   ),
