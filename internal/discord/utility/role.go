@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avvo-na/forkman/discord/templates"
+	"github.com/avvo-na/forkman/internal/discord/templates"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )
 
-// Top level handler for all role commands
 // TODO: add a modal for role all before we let it be used
+
+// Top level handler for all role commands
 func role(s *discordgo.Session, i *discordgo.InteractionCreate, l *zerolog.Logger) {
 	options := i.ApplicationCommandData().Options
 

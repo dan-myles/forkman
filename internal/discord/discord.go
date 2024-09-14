@@ -1,8 +1,8 @@
 package discord
 
 import (
-	"github.com/avvo-na/forkman/config"
-	"github.com/avvo-na/forkman/discord/utility"
+	"github.com/avvo-na/forkman/common/config"
+	"github.com/avvo-na/forkman/internal/discord/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 )
@@ -27,11 +27,11 @@ type Module interface {
 type Discord struct {
 	session *discordgo.Session
 	log     *zerolog.Logger
-	cfg     *config.Config
+	cfg     *config.SentinelConfig
 }
 
 // TODO: Probably dont panic :P or maybe we should? idk im tired 💀
-func New(cfg *config.Config, log *zerolog.Logger) *Discord {
+func New(cfg *config.SentinelConfig, log *zerolog.Logger) *Discord {
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
 	if err != nil {
 		panic(err)
