@@ -3,17 +3,16 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/avvo-na/forkman/common/config"
-	"github.com/avvo-na/forkman/internal/database"
 	"github.com/avvo-na/forkman/internal/discord"
 	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 type Server struct {
-	db      database.Service
+	db      *gorm.DB
 	log     *zerolog.Logger
 	valid   *validator.Validate
 	discord *discord.Discord
@@ -25,10 +24,11 @@ func New(
 	l *zerolog.Logger,
 	v *validator.Validate,
 	d *discord.Discord,
+	db *gorm.DB,
 ) *http.Server {
 
 	s := &Server{
-		db:      database.New(),
+		db:      db,
 		log:     l,
 		valid:   v,
 		discord: d,
@@ -39,9 +39,9 @@ func New(
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.ServerPort),
 		Handler:      s.registerRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  cfg.ServerTimeoutIdle,
+		ReadTimeout:  cfg.ServerTimeoutRead,
+		WriteTimeout: cfg.ServerTimeoutWrite,
 	}
 
 	return server

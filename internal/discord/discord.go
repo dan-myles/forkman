@@ -40,6 +40,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger) *Discord {
 	// Settings
 	s.Identify.Intents = discordgo.IntentsAll // What do we need permission for?
 	s.SyncEvents = false                      // Launch goroutines for handlers
+	s.StateEnabled = true
 
 	logger := log.With().Str("package", "discord").Logger()
 	return &Discord{
