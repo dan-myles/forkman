@@ -10,6 +10,7 @@ import (
 
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/common/logger"
+	"github.com/avvo-na/forkman/internal/database"
 	"github.com/avvo-na/forkman/internal/discord"
 	"github.com/avvo-na/forkman/internal/server"
 	"github.com/go-playground/validator/v10"
@@ -21,6 +22,10 @@ func main() {
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv)
 
+	// init database
+	db := database.New()
+	log.Panic().Msg("Database connection established & migrations applied")
+
 	// Create a new Discord bot
 	discord := discord.New(cfg, log)
 	discord.Setup()
@@ -31,7 +36,7 @@ func main() {
 	}
 
 	// Init new http server :D
-	server := server.New(cfg, log, valid, discord)
+	server := server.New(cfg, log, valid, discord, db)
 
 	// Wait for sigterm (Ctrl+C)
 	closed := make(chan struct{})
