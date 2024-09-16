@@ -29,8 +29,26 @@ func (s *Server) registerRoutes() http.Handler {
 		})
 	}
 
-	// Health check :P
-	r.Get("/health", s.health)
+	// Auth routes
+	r.Get("/auth/{provider}/callback", s.getAuthProviderCallback)
+	r.Get("/auth/{provider}/logout", s.getAuthProviderLogout)
+	r.Get("/auth/{provider}/login", s.getAuthProviderLogin)
+
+	// Protected routes (API ACCESS)
+	r.Route("/api", func(r chi.Router) {
+		r.Use(funware.Auth())
+
+		r.Get("/user", s.getUser)
+	})
 
 	return r
+}
+
+func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+	// Get the user from the session
+	session, _ := s.store.Get(r, "forkman-user-session")
+	user := session.Values["user"]
+
+	// Return the user
+	s.respond(w, r, http.StatusOK, user)
 }
