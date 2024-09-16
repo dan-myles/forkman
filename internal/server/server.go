@@ -3,11 +3,16 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/discord"
 	"github.com/go-playground/validator/v10"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	discordProvider "github.com/markbates/goth/providers/discord"
 	"github.com/rs/zerolog"
+	"github.com/wader/gormstore/v2"
 	"gorm.io/gorm"
 )
 
@@ -26,6 +31,27 @@ func New(
 	d *discord.Discord,
 	db *gorm.DB,
 ) *http.Server {
+	// Setup gothic session store
+	store := gormstore.New(db, []byte(cfg.ServerAuthSecret))
+	store.MaxAge(int(cfg.ServerAuthExpiry.Seconds()))
+	store.SessionOpts.Path = "/"
+	store.SessionOpts.HttpOnly = true
+	store.SessionOpts.Secure = true
+	gothic.Store = store
+
+	// Cleanup store every hour
+	quit := make(chan struct{})
+	go store.PeriodicCleanup(1*time.Hour, quit)
+
+	// Setup discord provider
+	goth.UseProviders(
+		discordProvider.New(
+			cfg.DiscordClientID,
+			cfg.DiscordClientSecret,
+			"http://localhost:5173/auth/discord/callback",
+			discordProvider.ScopeIdentify,
+			discordProvider.ScopeEmail,
+		))
 
 	s := &Server{
 		db:      db,

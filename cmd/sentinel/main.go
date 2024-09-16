@@ -24,7 +24,6 @@ func main() {
 
 	// init database
 	db := database.New()
-	log.Panic().Msg("Database connection established & migrations applied")
 
 	// Create a new Discord bot
 	discord := discord.New(cfg, log)

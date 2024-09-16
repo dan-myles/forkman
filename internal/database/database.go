@@ -16,7 +16,6 @@ func New() *gorm.DB {
 	// Catalog all models
 	models := []interface{}{
 		&User{},
-		&Session{},
 	}
 
 	// Auto migrate the database

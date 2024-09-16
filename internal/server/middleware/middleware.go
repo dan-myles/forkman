@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/markbates/goth/gothic"
 	"github.com/rs/zerolog"
 )
 
@@ -50,13 +51,31 @@ func Logger(logger *zerolog.Logger) func(next http.Handler) http.Handler {
 						"bytes_in":   r.Header.Get("Content-Length"),
 						"bytes_out":  ww.BytesWritten(),
 					}).
-					Msg("Incoming Request")
+					Msg("Served Request")
 			}()
 
 			next.ServeHTTP(ww, r)
 		}
 
 		// Return it in the chain
+		return http.HandlerFunc(fn)
+	}
+}
+
+func Auth() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		// Build our handler function
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			session, _ := gothic.Store.Get(r, "forkman-user-session")
+			if session.Values["user"] == nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Unauthorized"))
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		}
+
 		return http.HandlerFunc(fn)
 	}
 }
