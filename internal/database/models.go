@@ -8,11 +8,10 @@ import (
 
 type User struct {
 	gorm.Model
-	UserID               string
-	DiscordID            string
-	DiscordUsername      string
-	DiscordDiscriminator string
-	DiscordAvatarURL     string
-	DiscordEmail         string
-	LastLogin            time.Time
+	UUID             string
+	DiscordID        string
+	DiscordUsername  string
+	DiscordAvatarURL string
+	DiscordEmail     string
+	LastLogin        time.Time
 }
