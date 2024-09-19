@@ -5,19 +5,22 @@ import (
 	"os"
 	"path/filepath"
 
-	funware "github.com/avvo-na/forkman/internal/server/middleware"
+	"github.com/avvo-na/forkman/internal/server/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func (s *Server) registerRoutes() http.Handler {
+	// Init middleware
+	middleware := middleware.New(s.log)
+
 	// Setup router
 	r := chi.NewRouter()
-	r.Use(funware.Logger(s.log))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 
 	// Serve the Frontend :D
+	// TODO: embed the frontend into the binary
 	workdir, _ := os.Getwd()
 	fileDir := http.Dir(filepath.Join(workdir, "fork_data/static"))
 	r.Get("/*", http.FileServer(fileDir).ServeHTTP)
@@ -29,26 +32,17 @@ func (s *Server) registerRoutes() http.Handler {
 		})
 	}
 
-	// Auth routes
-	r.Get("/auth/{provider}/callback", s.getAuthProviderCallback)
-	r.Get("/auth/{provider}/logout", s.getAuthProviderLogout)
-	r.Get("/auth/{provider}/login", s.getAuthProviderLogin)
+	// Auth Routes
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/{provider}/login", s.authLogin)
+		r.Get("/{provider}/logout", s.authLogout)
+		r.Get("/{provider}/callback", s.authCallback)
+	})
 
-	// Protected routes (API ACCESS)
-	r.Route("/api", func(r chi.Router) {
-		r.Use(funware.Auth())
-
-		r.Get("/user", s.getUser)
+	// API Routes
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(middleware.Auth)
 	})
 
 	return r
-}
-
-func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
-	// Get the user from the session
-	session, _ := s.store.Get(r, "forkman-user-session")
-	user := session.Values["user"]
-
-	// Return the user
-	s.respond(w, r, http.StatusOK, user)
 }
