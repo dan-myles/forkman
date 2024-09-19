@@ -2,7 +2,6 @@ package utility
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog"
 )
 
 var commands = []*discordgo.ApplicationCommand{
@@ -63,12 +62,4 @@ var commands = []*discordgo.ApplicationCommand{
 			},
 		},
 	},
-}
-
-var commandHandlers = map[string]func(
-	s *discordgo.Session,
-	i *discordgo.InteractionCreate,
-	l *zerolog.Logger,
-){
-	"role": role,
 }
