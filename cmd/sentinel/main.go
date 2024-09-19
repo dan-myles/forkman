@@ -17,55 +17,56 @@ import (
 )
 
 func main() {
-	// Main deps for application
+	// Startup w/ API & Discord
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv)
-
-	// init database
 	db := database.New()
+	discord := discord.New(cfg, log, db)
+	server := server.New(cfg, log, valid, discord, db)
 
-	// Create a new Discord bot
-	discord := discord.New(cfg, log)
-	discord.Setup()
-	err := discord.Open()
-	defer discord.Close()
-	if err != nil {
+	// Cleanup on Interrupt/SIGTERM
+	// We need to catch both incase we're running on Windows
+	shutdown := make(chan struct{})
+	go func() {
+		ch := make(chan os.Signal, 2)
+		signal.Notify(ch, syscall.SIGTERM, os.Interrupt)
+		<-ch
+
+		log.Info().Msg("Attempting graceful shutdown...")
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		err := server.Shutdown(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("HTTP Server shutdown failure")
+		}
+
+		sqlDB, err := db.DB()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get database connection")
+		}
+
+		err = sqlDB.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to close database connection")
+		}
+
+		err = discord.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to close discord session")
+		}
+
+		log.Info().Msg("Server shutdown successfully")
+		close(shutdown)
+	}()
+
+	// Listen & Serve
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
 
-	// Init new http server :D
-	server := server.New(cfg, log, valid, discord, db)
-
-	// Wait for sigterm (Ctrl+C)
-	closed := make(chan struct{})
-	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
-		<-sigint
-
-		log.Info().Msgf("Shutting down server %v", server.Addr)
-
-		ctx, cancel := context.WithTimeout(
-			context.Background(),
-			1000*time.Millisecond, // TODO: Make this configurable
-		)
-		defer cancel()
-
-		if err := server.Shutdown(ctx); err != nil {
-			log.Error().Err(err).Msg("Server shutdown failure!")
-		}
-
-		// TODO: once we have a db, we should also close it here
-
-		close(closed)
-	}()
-
-	log.Info().Msgf("Starting server %v", server.Addr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Panic().Err(err).Msg("Server startup failure")
-	}
-
-	<-closed
-	log.Info().Msgf("Server shutdown successfully")
+	// Wait for shutdown
+	<-shutdown
 }

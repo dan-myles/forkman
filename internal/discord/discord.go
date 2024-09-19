@@ -5,33 +5,15 @@ import (
 	"github.com/avvo-na/forkman/internal/discord/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
-
-type Module interface {
-	// Returns the name of the module
-	Name() string
-
-	// Enables the module, handles any setup and registration
-	// of commands, writes config to file.
-	Enable() error
-
-	// Disables the module, handles any cleanup and deregistration
-	// of commands, writes config to file.
-	Disable() error
-
-	// Loads the module, handles any setup and registration of
-	// commands, *reads* config from file. To only be called once
-	Load() error
-}
 
 type Discord struct {
 	session *discordgo.Session
-	log     *zerolog.Logger
-	cfg     *config.SentinelConfig
+	util    *utility.UtilityModule
 }
 
-// TODO: Probably dont panic :P or maybe we should? idk im tired 💀
-func New(cfg *config.SentinelConfig, log *zerolog.Logger) *Discord {
+func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
 	if err != nil {
 		panic(err)
@@ -42,30 +24,21 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger) *Discord {
 	s.SyncEvents = false                      // Launch goroutines for handlers
 	s.StateEnabled = true
 
-	logger := log.With().Str("package", "discord").Logger()
+	// Load modules
+	utility := utility.New(s, log, cfg, db)
+	utility.RegisterCommands()
+	utility.RegisterHandlers()
+
+	// Open the session
+	err = s.Open()
+	if err != nil {
+		panic(err)
+	}
+
 	return &Discord{
 		session: s,
-		log:     &logger,
-		cfg:     cfg,
+		util:    utility,
 	}
-}
-
-// Only to be called once, i mean it 😎
-func (d *Discord) Setup() {
-	// Register all modules
-	modules := []Module{
-		utility.New(d.session, d.log, d.cfg),
-	}
-
-	// Load em up 🤠
-	for _, module := range modules {
-		err := module.Load()
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	d.log.Info().Msg("All modules loaded")
 }
 
 func (d *Discord) Open() error {
@@ -74,7 +47,6 @@ func (d *Discord) Open() error {
 		return err
 	}
 
-	d.log.Info().Msg("Opened a connection to Discord")
 	return nil
 }
 
@@ -84,11 +56,9 @@ func (d *Discord) Close() error {
 		return err
 	}
 
-	d.log.Info().Msg("Closed the connection to Discord")
 	return nil
 }
 
 func (d *Discord) GetSession() *discordgo.Session {
-	d.log.Debug().Msg("Returning the Discord session")
 	return d.session
 }

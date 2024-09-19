@@ -4,29 +4,35 @@ import (
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 type UtilityModule struct {
-	session *discordgo.Session
-	log     *zerolog.Logger
-	cfg     *config.SentinelConfig
+	session  *discordgo.Session
+	db       *gorm.DB
+	log      *zerolog.Logger
+	cfg      *config.SentinelConfig
+	commands []*discordgo.ApplicationCommand // Store commands for cleanup
+	unhandle *func()                         // Function to deregister the handler
 }
 
-func New(s *discordgo.Session, l *zerolog.Logger, c *config.SentinelConfig) *UtilityModule {
+func New(
+	s *discordgo.Session,
+	l *zerolog.Logger,
+	c *config.SentinelConfig,
+	db *gorm.DB,
+) *UtilityModule {
 	subLogger := l.With().Str("module", "utility").Logger()
 
 	return &UtilityModule{
 		session: s,
+		db:      db,
 		log:     &subLogger,
 		cfg:     c,
 	}
 }
 
-func (u *UtilityModule) Name() string {
-	return "utility"
-}
-
-func (u *UtilityModule) Load() error {
+func (u *UtilityModule) RegisterCommands() {
 	// Register all commands
 	for _, command := range commands {
 		u.log.Debug().
@@ -35,35 +41,28 @@ func (u *UtilityModule) Load() error {
 			Str("command", command.Name).
 			Msg("Registering command")
 
-		_, err := u.session.ApplicationCommandCreate(
+		c, err := u.session.ApplicationCommandCreate(
 			u.cfg.DiscordAppID,
 			u.cfg.DiscordDevGuildID,
 			command,
 		)
 		if err != nil {
-			return err
+			panic(err)
 		}
+
+		u.commands = append(u.commands, c)
 	}
-
-	u.log.Debug().
-		Interface("commands", commands).
-		Msg("Registering command handlers...")
-	u.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		handler, ok := commandHandlers[i.ApplicationCommandData().Name]
-		if !ok {
-			return
-		}
-		handler(s, i, u.log)
-	})
-
-	u.log.Info().Msg("Module loaded successfully")
-	return nil
 }
 
-func (u *UtilityModule) Enable() error {
-	return nil
-}
+func (u *UtilityModule) RegisterHandlers() {
+	fn := u.session.AddHandler(
+		func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			switch i.ApplicationCommandData().Name {
+			case "role":
+				u.role(s, i)
+			}
+		},
+	)
 
-func (u *UtilityModule) Disable() error {
-	return nil
+	u.unhandle = &fn
 }
