@@ -8,7 +8,6 @@ import (
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -71,17 +70,16 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate UUID
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate UUID")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// // Generate UUID
+	// uuid, err := uuid.NewRandom()
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("Failed to generate UUID")
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Save user to DB
 	s.db.Create(&database.User{
-		UUID:             uuid.String(),
 		DiscordID:        user.UserID,
 		DiscordUsername:  user.Name,
 		DiscordAvatarURL: user.AvatarURL,

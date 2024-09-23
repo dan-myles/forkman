@@ -25,11 +25,12 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	s.StateEnabled = true
 
 	// Load modules
+	log.Info().Msg("Loading utility module")
 	utility := utility.New(s, log, cfg, db)
-	utility.RegisterCommands()
-	utility.RegisterHandlers()
+	utility.Sync()
 
 	// Open the session
+	log.Info().Msg("Opening discord session")
 	err = s.Open()
 	if err != nil {
 		panic(err)
@@ -61,4 +62,8 @@ func (d *Discord) Close() error {
 
 func (d *Discord) GetSession() *discordgo.Session {
 	return d.session
+}
+
+func (d *Discord) GetUtility() *utility.UtilityModule {
+	return d.util
 }
