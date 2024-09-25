@@ -21,9 +21,10 @@ func main() {
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv)
-	db := database.New()
+	db := database.New(log)
 	discord := discord.New(cfg, log, db)
 	server := server.New(cfg, log, valid, discord, db)
+	log.Info().Msg("Initialization complete, starting server!")
 
 	// Cleanup on Interrupt/SIGTERM
 	// We need to catch both incase we're running on Windows
@@ -41,6 +42,7 @@ func main() {
 		if err != nil {
 			log.Error().Err(err).Msg("HTTP Server shutdown failure")
 		}
+		log.Info().Msg("HTTP Server shutdown successfully")
 
 		sqlDB, err := db.DB()
 		if err != nil {
@@ -51,17 +53,20 @@ func main() {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to close database connection")
 		}
+		log.Info().Msg("Database connection closed successfully")
 
 		err = discord.Close()
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to close discord session")
 		}
+		log.Info().Msg("Discord session closed successfully")
 
-		log.Info().Msg("Server shutdown successfully")
+		log.Info().Msg("Application shutdown completed!")
 		close(shutdown)
 	}()
 
 	// Listen & Serve
+	log.Info().Msgf("Server starting on :%d", cfg.ServerPort)
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)

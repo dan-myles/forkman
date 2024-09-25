@@ -2,7 +2,6 @@ package discord
 
 import (
 	"github.com/avvo-na/forkman/common/config"
-	"github.com/avvo-na/forkman/internal/discord/utility"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
@@ -10,7 +9,6 @@ import (
 
 type Discord struct {
 	session *discordgo.Session
-	util    *utility.UtilityModule
 }
 
 func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
@@ -24,12 +22,8 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	s.SyncEvents = false                      // Launch goroutines for handlers
 	s.StateEnabled = true
 
-	// Load modules
-	utility := utility.New(s, log, cfg, db)
-	utility.RegisterCommands()
-	utility.RegisterHandlers()
-
 	// Open the session
+	log.Info().Msg("Opening discord session")
 	err = s.Open()
 	if err != nil {
 		panic(err)
@@ -37,7 +31,6 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 
 	return &Discord{
 		session: s,
-		util:    utility,
 	}
 }
 

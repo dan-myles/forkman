@@ -8,7 +8,6 @@ import (
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -45,7 +44,42 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save user to session
+	// Create user object
+	dbUser := database.User{
+		DiscordSnowflake: user.UserID,
+		DiscordUsername:  user.Name,
+		DiscordAvatarURL: user.AvatarURL,
+		DiscordEmail:     user.Email,
+		LastLogin:        time.Now(),
+	}
+
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		log.Error().Err(tx.Error).Msg("Failed to start transaction")
+		http.Error(w, tx.Error.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if tx.Model(&dbUser).
+		Where("discord_snowflake = ?", user.UserID).
+		Updates(&dbUser).
+		RowsAffected == 0 {
+		tx.Create(&dbUser)
+	}
+
+	if tx.Commit().Error != nil {
+		log.Error().Err(tx.Error).Msg("Failed to commit transaction")
+		http.Error(w, tx.Error.Error(), http.StatusInternalServerError)
+
+		if tx.Rollback().Error != nil {
+			log.Error().Err(tx.Error).Msg("Failed to rollback transaction")
+			http.Error(w, tx.Error.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// Set user session in cookies
 	session, _ := gothic.Store.Get(r, sessionKey)
 	session.Values["user"] = user
 	err = session.Save(r, w)
@@ -55,41 +89,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if user exists
-	dbUser := database.User{}
-	result := s.db.Find(&dbUser, "discord_id = ?", user.UserID)
-	if result.RowsAffected > 0 {
-		// Update any user info
-		dbUser.DiscordUsername = user.Name
-		dbUser.DiscordAvatarURL = user.AvatarURL
-		dbUser.DiscordEmail = user.Email
-		dbUser.LastLogin = time.Now()
-		s.db.Save(&dbUser)
-
-		log.Info().Interface("user", user).Msg("Existing user authenticated")
-		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
-		return
-	}
-
-	// Generate UUID
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate UUID")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Save user to DB
-	s.db.Create(&database.User{
-		UUID:             uuid.String(),
-		DiscordID:        user.UserID,
-		DiscordUsername:  user.Name,
-		DiscordAvatarURL: user.AvatarURL,
-		DiscordEmail:     user.Email,
-		LastLogin:        time.Now(),
-	})
-
-	log.Info().Interface("user", user).Msg("New user authenticated")
+	log.Info().Interface("user", user).Msg("User authenticated")
 	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 }
 

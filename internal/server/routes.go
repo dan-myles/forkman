@@ -41,7 +41,9 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// API Routes
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(middleware.Auth)
+		// r.Use(middleware.Auth)
+		r.Get("/module/utility/enable", s.enableUtilityModule)
+		r.Get("/module/utility/disable", s.disableUtilityModule)
 	})
 
 	return r
