@@ -19,10 +19,12 @@ type User struct {
 }
 
 type Guild struct {
-	Snowflake string    `gorm:"primaryKey;unique"`
-	Modules   []Module  `gorm:"foreignKey:GuildSnowflake;references:Snowflake;constraint:OnDelete:CASCADE"`
-	CreatedAt time.Time // Managed by GORM
-	UpdatedAt time.Time // Managed by GORM
+	Snowflake  string    `gorm:"primaryKey;unique"`
+	Modules    []Module  `gorm:"foreignKey:GuildSnowflake;references:Snowflake;constraint:OnDelete:CASCADE"`
+	Admins     []User    `gorm:"many2many:guild_admins;"`
+	AdminRoles []string  `gorm:"type:text[]"`
+	CreatedAt  time.Time // Managed by GORM
+	UpdatedAt  time.Time // Managed by GORM
 }
 
 type Module struct {
@@ -31,7 +33,7 @@ type Module struct {
 	Name           string
 	Description    string
 	Enabled        bool `gorm:"default:false"`
-	Attributes     datatypes.JSON
+	State          datatypes.JSON
 	CreatedAt      time.Time // Managed by GORM
 	UpdatedAt      time.Time // Managed by GORM
 }

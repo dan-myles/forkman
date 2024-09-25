@@ -53,6 +53,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 		LastLogin:        time.Now(),
 	}
 
+	// Create or update user in database
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("Failed to start transaction")

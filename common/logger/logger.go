@@ -12,15 +12,15 @@ import (
 func New(goEnv string) *zerolog.Logger {
 	switch goEnv {
 	case "development":
-		return dev(goEnv)
+		return dev()
 	case "production":
-		return prod(goEnv)
+		return prod()
 	default:
 		panic("Unknown environment, please check your configuration file")
 	}
 }
 
-func dev(goEnv string) *zerolog.Logger {
+func dev() *zerolog.Logger {
 	// Default to console output
 	output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	output.NoColor = false
@@ -98,6 +98,6 @@ func dev(goEnv string) *zerolog.Logger {
 }
 
 // TODO: impl production logger, will just be json output
-func prod(goEnv string) *zerolog.Logger {
+func prod() *zerolog.Logger {
 	return nil
 }
