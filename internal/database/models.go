@@ -28,7 +28,7 @@ type Guild struct {
 }
 
 type Module struct {
-	ID             string `gorm:"primaryKey;unique;autoIncrement"`
+	ID             uint   `gorm:"primarykey;autoIncrement"`
 	GuildSnowflake string `gorm:"index"`
 	Name           string
 	Description    string

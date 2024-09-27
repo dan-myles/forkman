@@ -62,7 +62,7 @@ func (m *Middleware) Recoverer(next http.Handler) http.Handler {
 					Timestamp().
 					Interface("recover_info", rec).
 					Bytes("debug_stack", debug.Stack()).
-					Msg("log system error")
+					Msg("CRITICAL: recovered from panic")
 				http.Error(
 					w,
 					http.StatusText(http.StatusInternalServerError),

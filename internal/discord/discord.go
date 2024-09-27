@@ -28,6 +28,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	m1 := make(map[string]*moderation.ModerationModule)
 
 	// Global handlers
+	s.AddHandler(onReadyNotify(log))
 	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, m1))
 
 	// Open the session
@@ -63,4 +64,8 @@ func (d *Discord) Close() error {
 
 func (d *Discord) GetSession() *discordgo.Session {
 	return d.session
+}
+
+func (d *Discord) GetModerationModules() map[string]*moderation.ModerationModule {
+	return d.moderationModules
 }
