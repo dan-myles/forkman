@@ -5,43 +5,15 @@ import (
 
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/database"
+	ErrDiscord "github.com/avvo-na/forkman/internal/discord/common"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
-type ModerationState struct {
-	ModerationCommands []ModerationCommand `json:"moderation_commands"`
-}
-
-type ModerationCommand struct {
-	Enabled bool                         `json:"enabled"`
-	Command discordgo.ApplicationCommand `json:"command"`
-}
-
-// Default Configuration, DB State takes precedence
-var (
-	name         = "Moderation"
-	description  = "Fork hammer to-go, please!"
-	defaultState = ModerationState{
-		ModerationCommands: []ModerationCommand{
-			{
-				Enabled: false,
-				Command: discordgo.ApplicationCommand{
-					Name:        "ban",
-					Description: "Ban a user",
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "user",
-							Description: "User to ban",
-							Type:        discordgo.ApplicationCommandOptionUser,
-							Required:    true,
-						},
-					},
-				},
-			},
-		},
-	}
+const (
+	name        = "Moderation"
+	description = "Fork hammer to-go, please!"
 )
 
 type ModerationModule struct {
@@ -50,7 +22,7 @@ type ModerationModule struct {
 	db             *gorm.DB
 	log            *zerolog.Logger
 	cfg            *config.SentinelConfig
-	unhandlers     map[string]*func()
+	unhandler      *func()
 }
 
 func New(
@@ -68,7 +40,7 @@ func New(
 		db:             db,
 		log:            &subLogger,
 		cfg:            cfg,
-		unhandlers:     make(map[string]*func()),
+		unhandler:      nil,
 	}
 }
 
@@ -88,7 +60,7 @@ func (m *ModerationModule) Sync() error {
 		mod = database.Module{
 			Name:           name,
 			Description:    description,
-			Enabled:        true,
+			Enabled:        false,
 			GuildSnowflake: m.guildSnowflake,
 			State:          jsonState,
 		}
@@ -106,7 +78,7 @@ func (m *ModerationModule) Sync() error {
 	// Grab all command names
 	var commandNames []string
 	for _, command := range state.ModerationCommands {
-		commandNames = append(commandNames, command.Command.Name)
+		commandNames = append(commandNames, command.CommandData.Name)
 	}
 
 	// Check if we are enabled
@@ -114,10 +86,7 @@ func (m *ModerationModule) Sync() error {
 		log.Debug().Msg("Module is disabled, removing commands and handlers")
 
 		// disable all commands
-		remoteCommands, err := m.session.ApplicationCommands(m.cfg.DiscordAppID, m.guildSnowflake)
-		if err != nil {
-			return err
-		}
+		remoteCommands, _ := m.session.ApplicationCommands(m.cfg.DiscordAppID, m.guildSnowflake)
 		for _, remoteCommand := range remoteCommands {
 			for _, commandName := range commandNames {
 				if remoteCommand.Name == commandName {
@@ -132,13 +101,13 @@ func (m *ModerationModule) Sync() error {
 		}
 
 		// remove all handlers
-		for name, unhandle := range m.unhandlers {
-			if unhandle != nil {
-				log.Debug().Str("command", name).Msg("Removing handler")
-				(*unhandle)()
-			}
+		if m.unhandler != nil {
+			log.Debug().Msg("Removing moderation handler")
+			(*m.unhandler)()
+			m.unhandler = nil
 		}
 
+		log.Info().Msg("Module synced & disabled")
 		return nil
 	}
 
@@ -151,15 +120,15 @@ func (m *ModerationModule) Sync() error {
 			m.session.ApplicationCommandCreate(
 				m.cfg.DiscordAppID,
 				m.guildSnowflake,
-				&command.Command,
+				&command.CommandData,
 			)
-			log.Debug().Str("command", command.Command.Name).Msg("Command enabled")
+			log.Debug().Str("command", command.CommandData.Name).Msg("Command enabled")
 		}
 
 		// If the command is disabled, delete it
 		if !command.Enabled {
 			for _, remoteCommand := range remoteCommands {
-				if remoteCommand.Name == command.Command.Name {
+				if remoteCommand.Name == command.CommandData.Name {
 					m.session.ApplicationCommandDelete(
 						m.cfg.DiscordAppID,
 						m.guildSnowflake,
@@ -171,5 +140,65 @@ func (m *ModerationModule) Sync() error {
 		}
 	}
 
+	// If our handler is not there, we need to add it :)
+	if m.unhandler == nil {
+		log.Debug().Msg("Adding handler")
+		fn := m.session.AddHandler(m.handle)
+		m.unhandler = &fn
+	}
+
+	log.Info().Msg("Module synced")
 	return nil
+}
+
+// TODO: IMPLEMENT THESE
+func (m *ModerationModule) DisableAndSync() error {
+	log := m.log.With().
+		Str("module", "moderation").
+		Str("guild_snowflake", m.guildSnowflake).
+		Logger()
+
+	// we need to grab mod from the database
+	mod := database.Module{}
+	result := m.db.First(&mod, "name = ? AND guild_snowflake = ?", name, m.guildSnowflake)
+	if result.RowsAffected == 0 {
+		return ErrDiscord.ErrGuildNotFound
+	}
+
+	if !mod.Enabled {
+		return nil
+	}
+
+	// Unmarshal the state
+	mod.Enabled = false
+	m.db.Save(&mod)
+
+	// Sync
+	log.Info().Msg("Disabling and syncing!")
+	return m.Sync()
+}
+
+func (m *ModerationModule) EnableAndSync() error {
+	log := m.log.With().
+		Str("module", "moderation").
+		Str("guild_snowflake", m.guildSnowflake).
+		Logger()
+
+	// we need to grab mod from the database
+	mod := database.Module{}
+	result := m.db.First(&mod, "name = ? AND guild_snowflake = ?", name, m.guildSnowflake)
+	if result.RowsAffected == 0 {
+		return ErrDiscord.ErrGuildNotFound
+	}
+	if mod.Enabled {
+		return nil
+	}
+
+	// Update the state
+	mod.Enabled = true
+	m.db.Save(&mod)
+
+	// Sync
+	log.Info().Msg("Enabling and syncing!")
+	return m.Sync()
 }

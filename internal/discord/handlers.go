@@ -9,11 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func onReadyInitModules(
-	l *zerolog.Logger,
-) func(s *discordgo.Session, r *discordgo.Ready) {
+func onReadyNotify(l *zerolog.Logger) func(s *discordgo.Session, r *discordgo.Ready) {
 	return func(s *discordgo.Session, r *discordgo.Ready) {
-		l.Info().Msg("Ready EVENT")
+		l.Info().Msgf("Session has connected to Discord as %s", r.User.String())
 	}
 }
 
@@ -39,11 +37,11 @@ func onGuildCreateGuildUpdate(
 		}
 
 		// Instantiate and store modules
-		log.Info().Msg("Creating moderation module")
 		moderationModule := moderation.New(g.Guild.ID, s, l, db, cfg)
 		moderationModule.Sync()
 		moderationModules[g.Guild.ID] = moderationModule
 
-		log.Info().Msg("Guild updated")
+		// Finished!
+		log.Info().Msg("Guild instantiation complete")
 	}
 }
