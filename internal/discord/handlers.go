@@ -3,7 +3,6 @@ package discord
 import (
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/database"
-	"github.com/avvo-na/forkman/internal/discord/moderation"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
@@ -17,29 +16,39 @@ func onReadyNotify(l *zerolog.Logger) func(s *discordgo.Session, r *discordgo.Re
 
 func onGuildCreateGuildUpdate(
 	db *gorm.DB,
-	l *zerolog.Logger,
+	log *zerolog.Logger,
 	cfg *config.SentinelConfig,
-	moderationModules map[string]*moderation.ModerationModule,
+	// mm map[string]*moderation.Moderation,
 ) func(s *discordgo.Session, g *discordgo.GuildCreate) {
 	return func(s *discordgo.Session, g *discordgo.GuildCreate) {
-		log := l.With().Str("event", "onGuildCreate").
+		log := log.With().Str("event", "onGuildCreate").
 			Str("guild_snowflake", g.Guild.ID).
 			Str("guild_name", g.Guild.Name).
 			Logger()
 
-		// Create a new guild if it doesn't exist
-		guild := database.Guild{
-			Snowflake: g.Guild.ID,
+			// Create guild repo
+		repo := database.NewGuildRepository(db)
+
+		// Read or create guild
+		_, err := repo.ReadGuild(g.Guild.ID)
+		if err == gorm.ErrRecordNotFound {
+			if _, err := repo.CreateGuild(g.Guild); err != nil {
+				log.Error().Err(err).Msg("critical error creating guild")
+			}
+			log.Info().Msg("Guild creation complete")
+			return
+		}
+		if err != nil {
+			log.Error().Err(err).Msg("critical error reading guild")
+			return
 		}
 
-		if err := db.FirstOrCreate(&guild, guild).Error; err != nil {
-			log.Error().Err(err).Msg("Failed to create guild")
+		// Update guild
+		_, err = repo.UpdateGuild(g.Guild)
+		if err != nil {
+			log.Error().Err(err).Msg("critical error updating guild")
+			return
 		}
-
-		// Instantiate and store modules
-		moderationModule := moderation.New(g.Guild.ID, s, l, db, cfg)
-		moderationModule.Sync()
-		moderationModules[g.Guild.ID] = moderationModule
 
 		// Finished!
 		log.Info().Msg("Guild instantiation complete")

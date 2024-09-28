@@ -41,8 +41,8 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// Guild Specific Routes
 	r.Route("/api/v1/{guildSnowflake}", func(r chi.Router) {
-		r.Get("/module/moderation/disable", s.disableModerationModule)
-		r.Get("/module/moderation/enable", s.enableModerationModule)
+		// r.Get("/module/moderation/disable", s.disableModerationModule)
+		// r.Get("/module/moderation/enable", s.enableModerationModule)
 	})
 
 	return r
