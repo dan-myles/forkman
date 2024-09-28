@@ -2,13 +2,15 @@ package discord
 
 import (
 	"github.com/avvo-na/forkman/common/config"
+	"github.com/avvo-na/forkman/internal/discord/moderation"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
 type Discord struct {
-	session *discordgo.Session
+	session           *discordgo.Session
+	moderationModules *map[string]*moderation.Moderation
 }
 
 func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
@@ -22,8 +24,11 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	s.SyncEvents = false                      // Launch goroutines for handlers
 	s.StateEnabled = true
 
+	// Module store
+	mm := make(map[string]*moderation.Moderation)
+
 	// Global handlers
-	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg))
+	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, mm))
 	s.AddHandler(onReadyNotify(log))
 
 	// Open the session
@@ -34,7 +39,8 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	}
 
 	return &Discord{
-		session: s,
+		session:           s,
+		moderationModules: &mm,
 	}
 }
 

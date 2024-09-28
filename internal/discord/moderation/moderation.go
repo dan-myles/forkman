@@ -32,24 +32,24 @@ const (
 )
 
 func New(
-	gn string,
-	gs string,
-	id string,
-	s *discordgo.Session,
+	guildName string,
+	guildSnowflake string,
+	appId string,
+	session *discordgo.Session,
 	db *gorm.DB,
 	log *zerolog.Logger,
 ) *Moderation {
 	l := log.With().
 		Str("module", name).
-		Str("guild_snowflake", gs).
-		Str("guild_name", gn).
+		Str("guild_snowflake", guildSnowflake).
+		Str("guild_name", guildName).
 		Logger()
 
 	return &Moderation{
-		guildName:      gn,
-		guildSnowflake: gs,
-		appId:          id,
-		session:        s,
+		guildName:      guildName,
+		guildSnowflake: guildSnowflake,
+		appId:          appId,
+		session:        session,
 		repo:           NewRepository(db),
 		log:            &l,
 		cfg:            &ModerationConfig{},
@@ -60,6 +60,8 @@ func New(
 func (m *Moderation) Load() error {
 	mod, err := m.repo.ReadModule(m.guildSnowflake)
 	if err == gorm.ErrRecordNotFound {
+		m.log.Debug().Msg("module not found, creating...")
+
 		// Default general config
 		cfgJson, _ := json.Marshal(ModerationConfig{ImmuneRoles: []string{""}})
 
@@ -79,13 +81,14 @@ func (m *Moderation) Load() error {
 			Commands:       cmdJson,
 		}
 
-		if _, err := m.repo.CreateModule(insert); err != nil {
+		if mod, err = m.repo.CreateModule(insert); err != nil {
 			return fmt.Errorf("unable to create moderation module: %w", err)
 		}
 	}
 
 	// If we are not enabled, don't do anything!
 	if !mod.Enabled {
+		m.log.Debug().Msg("module disabled, skipping...")
 		return nil
 	}
 
@@ -114,5 +117,13 @@ func (m *Moderation) Load() error {
 	m.unhandle = &fn
 
 	log.Info().Msg("Module loaded")
+	return nil
+}
+
+func (m *Moderation) Disable() error {
+	return nil
+}
+
+func (m *Moderation) Enable() error {
 	return nil
 }
