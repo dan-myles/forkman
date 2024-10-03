@@ -43,7 +43,7 @@ func (m *Middleware) Logger(next http.Handler) http.Handler {
 					"bytes_in":   r.Header.Get("Content-Length"),
 					"bytes_out":  ww.BytesWritten(),
 				}).
-				Msg("Served Request")
+				Msg("served request")
 		}()
 
 		next.ServeHTTP(ww, r)
