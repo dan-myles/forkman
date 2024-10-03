@@ -1,6 +1,8 @@
 package discord
 
 import (
+	"errors"
+
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/discord/moderation"
 	"github.com/bwmarrin/discordgo"
@@ -10,8 +12,12 @@ import (
 
 type Discord struct {
 	session           *discordgo.Session
-	moderationModules *map[string]*moderation.Moderation
+	moderationModules map[string]*moderation.Moderation
 }
+
+var (
+	ErrModuleNotFound = errors.New("module not found")
+)
 
 func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
@@ -24,7 +30,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	s.SyncEvents = false                      // Launch goroutines for handlers
 	s.StateEnabled = true
 
-	// Module store
+	// Module stores
 	mm := make(map[string]*moderation.Moderation)
 
 	// Global handlers
@@ -40,7 +46,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 
 	return &Discord{
 		session:           s,
-		moderationModules: &mm,
+		moderationModules: mm,
 	}
 }
 
@@ -64,4 +70,13 @@ func (d *Discord) Close() error {
 
 func (d *Discord) GetSession() *discordgo.Session {
 	return d.session
+}
+
+func (d *Discord) GetModerationModule(guildSnowflake string) (*moderation.Moderation, error) {
+	mod, ok := d.moderationModules[guildSnowflake]
+	if !ok {
+		return nil, ErrModuleNotFound
+	}
+
+	return mod, nil
 }

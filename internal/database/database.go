@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"os"
 
 	sqliteGo "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
@@ -30,6 +31,12 @@ func New(log *zerolog.Logger) *gorm.DB {
 			},
 		},
 	)
+
+	// Make fork_data directory if it doesn't exist
+	err := os.MkdirAll("./fork_data", os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 
 	// Open a new connection to the database
 	log.Info().Msg("Opening database connection")

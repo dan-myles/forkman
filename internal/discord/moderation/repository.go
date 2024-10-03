@@ -33,3 +33,22 @@ func (r *Repository) ReadModule(guildSnowflake string) (*database.Module, error)
 
 	return mod, nil
 }
+
+func (r *Repository) UpdateModule(mod *database.Module) (*database.Module, error) {
+	m := &database.Module{}
+	result := r.db.First(m, "name = ? AND guild_snowflake = ?", name, mod.GuildSnowflake)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	m.Enabled = mod.Enabled
+	m.Config = mod.Config
+	m.Commands = mod.Commands
+
+	err := r.db.Save(m).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
