@@ -31,14 +31,6 @@ throw Forkman on a server of your choice and forget about it.
 - roll up a good ol' auth system (session based 🙅 no jwts)
 - backup system (with some sort of zip file like pocketbase)
 
-**TODO:**
-- [x] pick web router (stdlib/echo/chi?)
-- [ ] setup dev script for hot-reloading vite & go
-- [ ] store module state separately from env vars (prob still json?)
-- [ ] move to github issues instead of this todo-list lol
-- [ ] pick db (prob just sqlite!)
-- [ ] write a dockerfile that binds a volume to preserve DB state (need to store all state in some folder)
-
 ## Deps
 - go
 - air
