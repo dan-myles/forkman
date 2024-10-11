@@ -26,7 +26,6 @@ type Moderation struct {
 	session        *discordgo.Session
 	repo           *Repository
 	log            *zerolog.Logger
-	cfg            *ModerationConfig
 	unhandle       *func()
 }
 
@@ -61,7 +60,6 @@ func New(
 		session:        session,
 		repo:           NewRepository(db),
 		log:            &l,
-		cfg:            &ModerationConfig{},
 		unhandle:       nil,
 	}
 }
@@ -130,7 +128,7 @@ func (m *Moderation) Load() error {
 	fn := m.session.AddHandler(m.handle)
 	m.unhandle = &fn
 
-	m.log.Info().Msg("Module loaded")
+	m.log.Info().Msgf("module %s loaded", mod.Name)
 	return nil
 }
 

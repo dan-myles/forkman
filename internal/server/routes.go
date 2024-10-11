@@ -34,15 +34,22 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// Auth Routes
 	r.Route("/auth", func(r chi.Router) {
+		r.Use(middleware.AuthProvider)
 		r.Get("/{provider}/login", s.authLogin)
 		r.Get("/{provider}/logout", s.authLogout)
 		r.Get("/{provider}/callback", s.authCallback)
 	})
 
-	// Guild Specific Routes
-	r.Route("/api/v1/{guildSnowflake}", func(r chi.Router) {
-		r.Get("/module/moderation/disable", s.disableModerationModule)
-		r.Get("/module/moderation/enable", s.enableModerationModule)
+	// API Routes
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(middleware.ContentTypeJSON)
+
+		r.Route("/{guildSnowflake}", func(r chi.Router) {
+			r.Use(middleware.GuildSnowflake)
+			r.Get("/module/moderation/disable", s.disableModerationModule)
+			r.Get("/module/moderation/enable", s.enableModerationModule)
+			r.Get("/module/verification/panel/send/{channelId}", s.sendVerificationPanel)
+		})
 	})
 
 	return r

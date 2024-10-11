@@ -5,14 +5,16 @@ import (
 
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/discord/moderation"
+	"github.com/avvo-na/forkman/internal/discord/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
 type Discord struct {
-	session           *discordgo.Session
-	moderationModules map[string]*moderation.Moderation
+	session             *discordgo.Session
+	moderationModules   map[string]*moderation.Moderation
+	verificationModules map[string]*verification.Verification
 }
 
 var (
@@ -32,9 +34,10 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 
 	// Module stores
 	mm := make(map[string]*moderation.Moderation)
+	vm := make(map[string]*verification.Verification)
 
 	// Global handlers
-	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, mm))
+	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, mm, vm))
 	s.AddHandler(onReadyNotify(log))
 
 	// Open the session
@@ -45,8 +48,9 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	}
 
 	return &Discord{
-		session:           s,
-		moderationModules: mm,
+		session:             s,
+		moderationModules:   mm,
+		verificationModules: vm,
 	}
 }
 
@@ -74,6 +78,15 @@ func (d *Discord) GetSession() *discordgo.Session {
 
 func (d *Discord) GetModerationModule(guildSnowflake string) (*moderation.Moderation, error) {
 	mod, ok := d.moderationModules[guildSnowflake]
+	if !ok {
+		return nil, ErrModuleNotFound
+	}
+
+	return mod, nil
+}
+
+func (d *Discord) GetVerificationModule(guildSnowflake string) (*verification.Verification, error) {
+	mod, ok := d.verificationModules[guildSnowflake]
 	if !ok {
 		return nil, ErrModuleNotFound
 	}

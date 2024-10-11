@@ -29,8 +29,18 @@ var (
 )
 
 func (m *Moderation) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	m.log.Info().Msg("Receieved interaction request")
-	switch i.ApplicationCommandData().Name {
+	if i.Type != discordgo.InteractionApplicationCommand {
+		return
+	}
+
+	cmd := i.ApplicationCommandData().Name
+	m.log.Info().
+		Str("command_name", cmd).
+		Str("user_id", i.Member.User.ID).
+		Str("user_name", i.Member.User.Username).
+		Msg("served discord interaction request")
+
+	switch cmd {
 	case "mute":
 		m.mute(s, i)
 	}

@@ -4,6 +4,7 @@ import (
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/avvo-na/forkman/internal/discord/moderation"
+	"github.com/avvo-na/forkman/internal/discord/verification"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
@@ -23,6 +24,7 @@ func onGuildCreateGuildUpdate(
 	l *zerolog.Logger,
 	cfg *config.SentinelConfig,
 	mm map[string]*moderation.Moderation,
+	vm map[string]*verification.Verification,
 ) func(s *discordgo.Session, g *discordgo.GuildCreate) {
 	return func(s *discordgo.Session, g *discordgo.GuildCreate) {
 		log := l.With().Str("event", "onGuildCreate").
@@ -54,13 +56,21 @@ func onGuildCreateGuildUpdate(
 			return
 		}
 
-		// Init & store module
-		mod := moderation.New(g.Guild.Name, g.Guild.ID, cfg.DiscordAppID, s, db, l)
-		if err := mod.Load(); err != nil {
-			log.Error().Err(err).Msg("critical error adding moderation module")
+		// Init & store moderation
+		modr := moderation.New(g.Guild.Name, g.Guild.ID, cfg.DiscordAppID, s, db, l)
+		if err := modr.Load(); err != nil {
+			log.Error().Err(err).Msg("critical error init moderation module")
 			return
 		}
-		mm[g.Guild.ID] = mod
+		mm[g.Guild.ID] = modr
+
+		// Init & store verification
+		verf := verification.New(g.Guild.Name, g.Guild.ID, cfg.DiscordAppID, s, db, l)
+		if err := verf.Load(); err != nil {
+			log.Error().Err(err).Msg("critical error init verification module")
+			return
+		}
+		vm[g.Guild.ID] = verf
 
 		// Finished!
 		log.Info().Msg("guild instantiation complete")
