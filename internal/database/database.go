@@ -61,6 +61,7 @@ func New(log *zerolog.Logger) *gorm.DB {
 		&User{},
 		&Module{},
 		&Guild{},
+		&Email{},
 	}
 
 	// Auto migrate the database

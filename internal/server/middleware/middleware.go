@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"runtime/debug"
 	"time"
 
+	"github.com/avvo-na/forkman/internal/server/common/err"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/markbates/goth/gothic"
 	"github.com/rs/zerolog"
@@ -78,7 +81,7 @@ func (m *Middleware) Recoverer(next http.Handler) http.Handler {
 }
 
 func (m *Middleware) Auth(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := gothic.Store.Get(r, "forkman-user-session")
 		if session.Values["user"] == nil {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -87,11 +90,43 @@ func (m *Middleware) Auth(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-	}
+	})
+}
 
-	return http.HandlerFunc(fn)
+func (m *Middleware) AuthProvider(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		provider := chi.URLParam(r, "provider")
+		if provider == "" {
+			err.ServerError(w, err.ErrAuthProviderNotFound)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (m *Middleware) RequestID(next http.Handler) http.Handler {
 	return middleware.RequestID(next)
+}
+
+func (m *Middleware) ContentTypeJSON(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// IDK how i feel about injecting guild snowflake into context :/
+func (m *Middleware) GuildSnowflake(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gs := chi.URLParam(r, "guildSnowflake")
+		if gs == "" {
+			err.BadRequest(w, err.ErrGuildNotFound)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(r.Context(), "guildSnowflake", gs))
+		next.ServeHTTP(w, r)
+	})
 }

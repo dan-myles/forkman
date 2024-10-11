@@ -26,6 +26,7 @@ type Guild struct {
 	Admins     []User    `gorm:"many2many:guild_admins;"`
 	AdminRoles []string  `gorm:"type:text[]"`
 	Modules    []Module  `gorm:"foreignKey:GuildSnowflake;references:Snowflake;constraint:OnDelete:CASCADE"`
+	Emails     []Email   `gorm:"foreignKey:GuildSnowflake;references:Snowflake;constraint:OnDelete:CASCADE"`
 	CreatedAt  time.Time // Managed by GORM
 	UpdatedAt  time.Time // Managed by GORM
 }
@@ -40,4 +41,11 @@ type Module struct {
 	Commands       datatypes.JSON
 	CreatedAt      time.Time // Managed by GORM
 	UpdatedAt      time.Time // Managed by GORM
+}
+
+type Email struct {
+	ID             uint   `gorm:"primarykey;autoIncrement"`
+	GuildSnowflake string `gorm:"index"`
+	UserSnowflake  string
+	Address        string
 }
