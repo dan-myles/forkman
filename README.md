@@ -1,7 +1,7 @@
 # Forkman
 
 > WARNING: Forkman is still in early development, and is not yet
-ready for use in production. BE CAREFUL!
+ready for use in production. BE CAREFUL!!
 
 Forkman is a self-hosted, open source Discord bot that is designed
 for enterprise use in mind. As Discord becomes more of a social media platform
@@ -18,11 +18,13 @@ React SPA, that interacts with that REST API. The long term goal here is that yo
 throw Forkman on a server of your choice and forget about it.
 
 *Features*
+
 - None yet lol
 
 ## Development
 
 **Roadmap:**
+
 - web dashboard
 - client-server sync for realtime updates on commands to dashboard
 - aggregate logs & open rest endpoint to collect them
@@ -32,7 +34,7 @@ throw Forkman on a server of your choice and forget about it.
 - backup system (with some sort of zip file like pocketbase)
 
 ## Deps
+
 - go
 - air
 - pnpm
-

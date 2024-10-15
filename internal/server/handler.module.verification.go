@@ -24,4 +24,7 @@ func (s *Server) sendVerificationPanel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		e.ServerError(w, err)
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{ "message": "Successfully sent email verification panel." }`))
 }
