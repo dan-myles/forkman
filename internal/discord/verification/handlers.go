@@ -1,6 +1,8 @@
 package verification
 
 import (
+	"os"
+
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/bwmarrin/discordgo"
 	"github.com/resend/resend-go/v2"
@@ -271,7 +273,7 @@ func (m *Verification) handleCIDVerifyEmailCodeModal(
 			Str("user_name", i.Member.User.Username).
 			Msg("user could not be verified")
 		msg := "❌ User <@" + email.UserSnowflake + "> could not be verified ->" + email.Address
-		s.ChannelMessageSend(LogChannelID, msg)
+		s.ChannelMessageSend(os.Getenv("LOG_CHANNEL_ID"), msg)
 
 		return
 	}
@@ -301,8 +303,8 @@ func (m *Verification) handleCIDVerifyEmailCodeModal(
 		return
 	}
 
-	s.GuildMemberRoleRemove(m.guildSnowflake, i.Member.User.ID, RoleToRemove)
-	s.GuildMemberRoleAdd(m.guildSnowflake, i.Member.User.ID, RoleToAdd)
+	s.GuildMemberRoleRemove(m.guildSnowflake, i.Member.User.ID, os.Getenv("ROLE_TO_REMOVE"))
+	s.GuildMemberRoleAdd(m.guildSnowflake, i.Member.User.ID, os.Getenv("ROLE_TO_ADD"))
 
 	log.Debug().
 		Str("user_id", i.Member.User.ID).
@@ -310,5 +312,5 @@ func (m *Verification) handleCIDVerifyEmailCodeModal(
 		Msg("user succesfully verified")
 
 	msg := "✅ User <@" + email.UserSnowflake + "> was verified -> " + email.Address
-	s.ChannelMessageSend(LogChannelID, msg)
+	s.ChannelMessageSend(os.Getenv("LOG_CHANNEL_ID"), msg)
 }
