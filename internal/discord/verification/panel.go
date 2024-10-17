@@ -6,7 +6,7 @@ func (m *Verification) SendVerificationPanel(channelId string) error {
 	// Create embed message
 	embed := &discordgo.MessageEmbed{
 		Title:       "Verification",
-		Description: "This Discord is for official ASU students only, if you wish to access all of it please click the button below and provide your ASURITE ID.",
+		Description: "This Discord is for students admitted to Arizona State University. To get access to the full server please verify you've been accepted into Arizona State University.",
 		Color:       0x00FF00, // green color
 		Image: &discordgo.MessageEmbedImage{
 			URL: "https://i.ibb.co/MBVt8Mq/arrowfork.png",
