@@ -25,6 +25,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/resend/resend-go/v2 v2.12.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 )

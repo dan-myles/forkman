@@ -48,4 +48,8 @@ type Email struct {
 	GuildSnowflake string `gorm:"index"`
 	UserSnowflake  string
 	Address        string
+	Code           string
+	IsVerified     bool
+	CreatedAt      time.Time // Managed by GORM
+	UpdatedAt      time.Time // Managed by GORM
 }

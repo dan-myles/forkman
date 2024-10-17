@@ -49,8 +49,8 @@ func New(
 ) *Moderation {
 	l := log.With().
 		Str("module", name).
-		Str("guild_snowflake", guildSnowflake).
 		Str("guild_name", guildName).
+		Str("guild_snowflake", guildSnowflake).
 		Logger()
 
 	return &Moderation{
@@ -208,22 +208,26 @@ func (m *Moderation) Enable() error {
 		return fmt.Errorf("critical error unmarshalling cmd json: %w", err)
 	}
 
+	m.log.Info().Msgf("Testing guild snowflake: %s", m.guildSnowflake)
+
 	// Register commands (or overwrite!)
 	for _, command := range commands {
 		if !cmds[command.Name] {
-			m.log.Debug().Str("command", command.Name).Msg("command disabled, skipping...")
+			m.log.Debug().
+				Str("command_name", command.Name).
+				Msg("command disabled, skipping...")
 			continue
 		}
 
-		m.log.Debug().
-			Str("command_name", command.Name).
-			Str("command_id", command.ID).
-			Msg("command enabled")
-
-		_, err := m.session.ApplicationCommandCreate(m.appId, m.guildSnowflake, command)
+		ret, err := m.session.ApplicationCommandCreate(m.appId, m.guildSnowflake, command)
 		if err != nil {
 			m.log.Error().Err(err).Str("command", command.Name).Msg("error registering command")
 		}
+
+		m.log.Debug().
+			Str("command_name", ret.Name).
+			Str("command_id", ret.ID).
+			Msg("command enabled")
 	}
 
 	// Register handler

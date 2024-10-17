@@ -22,6 +22,10 @@ type SentinelConfig struct {
 	ServerAuthExpiry    time.Duration `env:"SERVER_AUTH_EXPIRY,required,notEmpty"`
 	LogLevel            string        `env:"LOG_LEVEL,required,notEmpty"`
 	GoEnv               string        `env:"GO_ENV,required,notEmpty"`
+	ResendAPIKey        string        `env:"RESEND_API_KEY,required,notEmpty"`
+	LogChannelID        string        `env:"LOG_CHANNEL_ID,required,notEmpty"`
+	RoleToRemove        string        `env:"ROLE_TO_REMOVE,required,notEmpty"`
+	RoleToAdd           string        `env:"ROLE_TO_ADD,required,notEmpty"`
 }
 
 func New() *SentinelConfig {

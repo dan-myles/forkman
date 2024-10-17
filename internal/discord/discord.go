@@ -7,6 +7,7 @@ import (
 	"github.com/avvo-na/forkman/internal/discord/moderation"
 	"github.com/avvo-na/forkman/internal/discord/verification"
 	"github.com/bwmarrin/discordgo"
+	"github.com/resend/resend-go/v2"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -17,11 +18,9 @@ type Discord struct {
 	verificationModules map[string]*verification.Verification
 }
 
-var (
-	ErrModuleNotFound = errors.New("module not found")
-)
+var ErrModuleNotFound = errors.New("module not found")
 
-func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
+func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB, email *resend.Client) *Discord {
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
 	if err != nil {
 		panic(err)
@@ -37,7 +36,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	vm := make(map[string]*verification.Verification)
 
 	// Global handlers
-	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, mm, vm))
+	s.AddHandler(onGuildCreateGuildUpdate(db, log, cfg, email, mm, vm))
 	s.AddHandler(onReadyNotify(log))
 
 	// Open the session

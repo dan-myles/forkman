@@ -14,6 +14,7 @@ import (
 	"github.com/avvo-na/forkman/internal/discord"
 	"github.com/avvo-na/forkman/internal/server"
 	"github.com/go-playground/validator/v10"
+	"github.com/resend/resend-go/v2"
 )
 
 func main() {
@@ -22,7 +23,8 @@ func main() {
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv)
 	db := database.New(log)
-	discord := discord.New(cfg, log, db)
+	email := resend.NewClient(cfg.ResendAPIKey)
+	discord := discord.New(cfg, log, db, email)
 	server := server.New(cfg, log, valid, discord, db)
 	log.Info().Msg("Initialization complete, starting server!")
 

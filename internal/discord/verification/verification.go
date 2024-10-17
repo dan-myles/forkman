@@ -7,6 +7,7 @@ import (
 
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/bwmarrin/discordgo"
+	"github.com/resend/resend-go/v2"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -21,6 +22,7 @@ type Verification struct {
 	guildSnowflake string
 	appId          string
 	session        *discordgo.Session
+	email          *resend.Client
 	repo           *Repository
 	log            *zerolog.Logger
 	unlisten       *func()
@@ -42,6 +44,7 @@ func New(
 	appId string,
 	session *discordgo.Session,
 	db *gorm.DB,
+	email *resend.Client,
 	log *zerolog.Logger,
 ) *Verification {
 	l := log.With().
@@ -55,6 +58,7 @@ func New(
 		guildSnowflake: guildSnowflake,
 		appId:          appId,
 		session:        session,
+		email:          email,
 		repo:           NewRepository(db),
 		log:            &l,
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/avvo-na/forkman/internal/discord/moderation"
 	"github.com/avvo-na/forkman/internal/discord/verification"
 	"github.com/bwmarrin/discordgo"
+	"github.com/resend/resend-go/v2"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,7 @@ func onGuildCreateGuildUpdate(
 	db *gorm.DB,
 	l *zerolog.Logger,
 	cfg *config.SentinelConfig,
+	email *resend.Client,
 	mm map[string]*moderation.Moderation,
 	vm map[string]*verification.Verification,
 ) func(s *discordgo.Session, g *discordgo.GuildCreate) {
@@ -36,7 +38,7 @@ func onGuildCreateGuildUpdate(
 		repo := database.NewGuildRepository(db)
 
 		// Read or create guild
-		_, err := repo.ReadGuild(g.Guild.ID)
+		_, err := repo.ReadGuild(g.ID)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Error().Err(err).Msg("critical error reading guild")
 			return
@@ -57,20 +59,20 @@ func onGuildCreateGuildUpdate(
 		}
 
 		// Init & store moderation
-		modr := moderation.New(g.Guild.Name, g.Guild.ID, cfg.DiscordAppID, s, db, l)
+		modr := moderation.New(g.Name, g.ID, cfg.DiscordAppID, s, db, l)
 		if err := modr.Load(); err != nil {
 			log.Error().Err(err).Msg("critical error init moderation module")
 			return
 		}
-		mm[g.Guild.ID] = modr
+		mm[g.ID] = modr
 
 		// Init & store verification
-		verf := verification.New(g.Guild.Name, g.Guild.ID, cfg.DiscordAppID, s, db, l)
+		verf := verification.New(g.Name, g.ID, cfg.DiscordAppID, s, db, email, l)
 		if err := verf.Load(); err != nil {
 			log.Error().Err(err).Msg("critical error init verification module")
 			return
 		}
-		vm[g.Guild.ID] = verf
+		vm[g.ID] = verf
 
 		// Finished!
 		log.Info().Msg("guild instantiation complete")

@@ -5,28 +5,26 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var (
-	commands = []*discordgo.ApplicationCommand{
-		{
-			Name:        "mute",
-			Description: "a user for a certain duration",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionUser,
-					Name:        "user",
-					Description: "user to mute",
-					Required:    true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "length",
-					Description: "length of the timeout (ie. '1d', '30m', '60s')",
-					Required:    true,
-				},
+var commands = []*discordgo.ApplicationCommand{
+	{
+		Name:        "mute",
+		Description: "a user for a certain duration",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "user to mute",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "length",
+				Description: "length of the timeout (ie. '1d', '30m', '60s')",
+				Required:    true,
 			},
 		},
-	}
-)
+	},
+}
 
 func (m *Moderation) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionApplicationCommand {
