@@ -85,9 +85,6 @@ func (m *Verification) Load() error {
 		}
 	}
 
-	fn := m.session.AddHandler(m.listen)
-	m.unlisten = &fn
-
 	m.log.Info().Msgf("module %s loaded", mod.Name)
 	return nil
 }
@@ -106,11 +103,6 @@ func (m *Verification) Disable() error {
 	_, err = m.repo.UpdateModule(mod)
 	if err != nil {
 		return err
-	}
-
-	if m.unlisten != nil {
-		(*m.unlisten)()
-		m.unlisten = nil
 	}
 
 	m.log.Info().Msg("module disabled")
@@ -132,9 +124,6 @@ func (m *Verification) Enable() error {
 	if err != nil {
 		return err
 	}
-
-	fn := m.session.AddHandler(m.listen)
-	m.unlisten = &fn
 
 	m.log.Info().Msg("module enabled")
 	return nil

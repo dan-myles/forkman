@@ -12,7 +12,6 @@ type SentinelConfig struct {
 	DiscordClientID     string        `env:"DISCORD_CLIENT_ID,required,notEmpty"`
 	DiscordClientSecret string        `env:"DISCORD_CLIENT_SECRET,required,notEmpty"`
 	DiscordBotToken     string        `env:"DISCORD_BOT_TOKEN,required,notEmpty"`
-	DiscordDevGuildID   string        `env:"DISCORD_DEV_GUILD_ID,required,notEmpty"`
 	DiscordOwnerID      string        `env:"DISCORD_OWNER_ID,required,notEmpty"`
 	ServerPort          int           `env:"SERVER_PORT,required,notEmpty"`
 	ServerTimeoutRead   time.Duration `env:"SERVER_TIMEOUT_READ,required,notEmpty"`

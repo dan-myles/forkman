@@ -26,7 +26,6 @@ type Moderation struct {
 	session        *discordgo.Session
 	repo           *Repository
 	log            *zerolog.Logger
-	unhandle       *func()
 }
 
 const (
@@ -60,7 +59,6 @@ func New(
 		session:        session,
 		repo:           NewRepository(db),
 		log:            &l,
-		unhandle:       nil,
 	}
 }
 
@@ -79,6 +77,7 @@ func (m *Moderation) Load() error {
 		}
 		cmdJson, _ := json.Marshal(cmdMap)
 
+		// Default module config
 		insert := &database.Module{
 			GuildSnowflake: m.guildSnowflake,
 			Name:           name,
@@ -106,27 +105,24 @@ func (m *Moderation) Load() error {
 		return fmt.Errorf("critical error unmarshalling cmd json: %w", err)
 	}
 
-	// Register commands (or overwrite!)
+	// TODO: only register commands that are not registered on remote
+	// so eventually check remote and do some sort of "merge"
 	for _, command := range commands {
 		if !cmds[command.Name] {
 			m.log.Debug().Str("command", command.Name).Msg("command disabled, skipping...")
 			continue
 		}
 
-		m.log.Debug().
-			Str("command_name", command.Name).
-			Str("command_id", command.ID).
-			Msg("command enabled")
-
 		_, err := m.session.ApplicationCommandCreate(m.appId, m.guildSnowflake, command)
 		if err != nil {
 			m.log.Error().Err(err).Str("command", command.Name).Msg("error registering command!")
 		}
-	}
 
-	// Register handler
-	fn := m.session.AddHandler(m.handle)
-	m.unhandle = &fn
+		m.log.Debug().
+			Str("command_name", command.Name).
+			Str("command_id", command.ID).
+			Msg("command enabled")
+	}
 
 	m.log.Info().Msgf("module %s loaded", mod.Name)
 	return nil
@@ -173,12 +169,6 @@ func (m *Moderation) Disable() error {
 		}
 	}
 
-	// Unregister handler
-	if m.unhandle != nil {
-		(*m.unhandle)()
-		m.unhandle = nil
-	}
-
 	m.log.Info().Msg("module disabled")
 	return nil
 }
@@ -208,8 +198,6 @@ func (m *Moderation) Enable() error {
 		return fmt.Errorf("critical error unmarshalling cmd json: %w", err)
 	}
 
-	m.log.Info().Msgf("Testing guild snowflake: %s", m.guildSnowflake)
-
 	// Register commands (or overwrite!)
 	for _, command := range commands {
 		if !cmds[command.Name] {
@@ -229,10 +217,6 @@ func (m *Moderation) Enable() error {
 			Str("command_id", ret.ID).
 			Msg("command enabled")
 	}
-
-	// Register handler
-	fn := m.session.AddHandler(m.handle)
-	m.unhandle = &fn
 
 	return nil
 }

@@ -21,50 +21,54 @@ var (
 	AllowedDomain           = "@asu.edu"
 )
 
-func (m *Verification) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.GuildID != m.guildSnowflake {
+func (m *Verification) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	mod, err := m.repo.ReadModule(i.GuildID)
+	if err != nil {
 		return
 	}
 
-	if i.Type != discordgo.InteractionApplicationCommand {
+	if !mod.Enabled {
 		return
+	}
+
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		m.handleCommand(s, i)
+	case discordgo.InteractionMessageComponent:
+		m.handleComponent(s, i)
+	case discordgo.InteractionModalSubmit:
+		m.handleModal(s, i)
 	}
 }
 
-func (m *Verification) listen(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.GuildID != m.guildSnowflake {
-		return
-	}
+func (m *Verification) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+}
 
-	customID := ""
-	switch i.Type {
-	case discordgo.InteractionMessageComponent:
-		customID = i.MessageComponentData().CustomID
-	case discordgo.InteractionModalSubmit:
-		customID = i.ModalSubmitData().CustomID
-	default:
-		return
-	}
-
-	switch customID {
+func (m *Verification) handleComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	cid := i.MessageComponentData().CustomID
+	switch cid {
 	case CIDVerifyEmailBtn:
-		go m.handleCIDVerifyEmailBtn(s, i)
-		return
-	case CIDVerifyEmailModal:
-		go m.handleCIDVerifyEmailModal(s, i)
-		return
+		m.handleCIDVerifyEmailBtn(s, i)
 	case CIDVerifyEmailCodeBtn:
-		go m.handleCIDVerifyEmailCodeBtn(s, i)
-		return
-	case CIDVerifyEmailCodeModal:
-		go m.handleCIDVerifyEmailCodeModal(s, i)
-		return
+		m.handleCIDVerifyEmailCodeBtn(s, i)
 	default:
 		m.log.Error().
-			Str("interaction_id", i.Interaction.ID).
-			Str("custom_id", customID).
-			Msg("unhandled interaction!!!")
-		return
+			Str("custom_id", cid).
+			Msg("unhandled interaction")
+	}
+}
+
+func (m *Verification) handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	cid := i.MessageComponentData().CustomID
+	switch cid {
+	case CIDVerifyEmailModal:
+		m.handleCIDVerifyEmailModal(s, i)
+	case CIDVerifyEmailCodeModal:
+		m.handleCIDVerifyEmailCodeModal(s, i)
+	default:
+		m.log.Error().
+			Str("custom_id", cid).
+			Msg("unhandled interaction")
 	}
 }
 
