@@ -17,12 +17,14 @@ func (s *Server) sendVerificationPanel(w http.ResponseWriter, r *http.Request) {
 
 	mod, err := s.discord.GetVerificationModule(gs)
 	if err != nil {
+		e.ServerError(w, err)
 		return
 	}
 
 	err = mod.SendVerificationPanel(channelId)
 	if err != nil {
 		e.ServerError(w, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

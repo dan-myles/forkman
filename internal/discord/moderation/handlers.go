@@ -26,18 +26,24 @@ var commands = []*discordgo.ApplicationCommand{
 	},
 }
 
-func (m *Moderation) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionApplicationCommand {
+func (m *Moderation) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	mod, err := m.repo.ReadModule(i.GuildID)
+	if err != nil {
 		return
 	}
 
-	cmd := i.ApplicationCommandData().Name
-	m.log.Info().
-		Str("command_name", cmd).
-		Str("user_id", i.Member.User.ID).
-		Str("user_name", i.Member.User.Username).
-		Msg("served discord interaction request")
+	if !mod.Enabled {
+		return
+	}
 
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		m.handleCommand(s, i)
+	}
+}
+
+func (m *Moderation) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	cmd := i.ApplicationCommandData().Name
 	switch cmd {
 	case "mute":
 		m.mute(s, i)
