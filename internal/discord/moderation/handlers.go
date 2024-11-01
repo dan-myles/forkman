@@ -122,7 +122,7 @@ func (m *Moderation) nuke(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		s.ChannelMessageSend(logChannel, "All member chunks received! Processing oppenheimer maneuver...")
 		for _, mem := range memberMap {
 			if len(memberMap)%100 == 0 {
-				s.ChannelMessageSend(logChannel, fmt.Sprintf("%d members left to process", len(memberMap)))
+				s.ChannelMessageSend(logChannel, fmt.Sprintf("%d members left to kick", len(memberMap)))
 			}
 
 			if mem.User.Bot {
@@ -153,6 +153,7 @@ func (m *Moderation) nuke(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			}
 
 			m.log.Info().Msgf("Kicked member %s", mem.User.GlobalName)
+			delete(memberMap, mem.User.ID)
 		}
 
 		s.ChannelMessageSend(i.ChannelID, "Done!")
