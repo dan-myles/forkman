@@ -34,7 +34,6 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// Auth Routes
 	r.Route("/auth", func(r chi.Router) {
-		r.Use(middleware.AuthProvider)
 		r.Get("/{provider}/login", s.authLogin)
 		r.Get("/{provider}/logout", s.authLogout)
 		r.Get("/{provider}/callback", s.authCallback)

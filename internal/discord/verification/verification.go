@@ -25,7 +25,6 @@ type Verification struct {
 	email          *resend.Client
 	repo           *Repository
 	log            *zerolog.Logger
-	unlisten       *func()
 }
 
 const (

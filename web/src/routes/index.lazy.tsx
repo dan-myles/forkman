@@ -1,6 +1,5 @@
 import { DiscordLogoIcon } from "@radix-ui/react-icons"
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,12 +24,12 @@ export default function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link to="/dashboard">
+          <a href="/auth/discord/login">
             <Button className="w-full" variant="outline">
               <DiscordLogoIcon className="mr-2 h-4 w-4" />
               Continue with Discord
             </Button>
-          </Link>
+          </a>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <a href="https://discord.com/register" className="underline">

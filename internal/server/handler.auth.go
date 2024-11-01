@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/avvo-na/forkman/internal/database"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/markbates/goth/gothic"
 )
@@ -20,6 +22,9 @@ var sessionKey = "forkman-user-session"
 //	@tags auth
 //	@router /auth/{provider}/login [get]
 func (s *Server) authLogin(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+
 	gothic.BeginAuthHandler(w, r)
 }
 
@@ -30,6 +35,8 @@ func (s *Server) authLogin(w http.ResponseWriter, r *http.Request) {
 //	@tags auth
 //	@router /auth/{provider}/callback [get]
 func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
 	log := s.log.With().Str("request_id", middleware.GetReqID(r.Context())).Logger()
 
 	// Complete auth
@@ -97,6 +104,8 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 //	@tags auth
 //	@router /auth/{provider}/callback [get]
 func (s *Server) authLogout(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
 	log := s.log.With().Str("request_id", middleware.GetReqID(r.Context())).Logger()
 
 	// Logout

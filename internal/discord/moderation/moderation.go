@@ -105,6 +105,22 @@ func (m *Moderation) Load() error {
 		return fmt.Errorf("critical error unmarshalling cmd json: %w", err)
 	}
 
+	// If new commands are added, add them to the DB state
+	for _, command := range commands {
+		if _, ok := cmds[command.Name]; !ok {
+			cmds[command.Name] = true
+			mod.Commands, _ = json.Marshal(cmds)
+
+			_, err = m.repo.UpdateModule(mod)
+			if err != nil {
+				return fmt.Errorf("unable to update module: %w", err)
+			}
+
+			m.log.Info().Msgf("Added new command %s to DB state", command.Name)
+			continue
+		}
+	}
+
 	// TODO: only register commands that are not registered on remote
 	// so eventually check remote and do some sort of "merge"
 	for _, command := range commands {
