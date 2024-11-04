@@ -61,7 +61,6 @@ func main() {
 		}
 		log.Info().Msg("Discord session closed successfully")
 
-		log.Info().Msg("Application shutdown completed!")
 		close(shutdown)
 	}()
 
@@ -74,4 +73,5 @@ func main() {
 
 	// Wait for shutdown
 	<-shutdown
+  log.Info().Msg("Application shutdown completed!")
 }
