@@ -11,10 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO:
-// - add some sort of system to reject enable/disable calls
-//   when they are in progress, prob some sort of mutex
-
 type ModerationConfig struct {
 	ImmuneRoles []string `json:"immune_roles"`
 }

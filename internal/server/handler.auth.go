@@ -13,8 +13,6 @@ import (
 
 var sessionKey = "forkman-user-session"
 
-// TODO: use repository to insert into database instead of raw-doggin it
-
 // authLogin godoc
 //
 //	@summary Login with a provider
