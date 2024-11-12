@@ -1,7 +1,10 @@
 package verification
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/bwmarrin/discordgo"
@@ -20,57 +23,6 @@ var (
 	CIDVerifyEmailCodeModal = "verify_email_code_modal"
 	AllowedDomain           = "@asu.edu"
 )
-
-func (m *Verification) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	mod, err := m.repo.ReadModule(i.GuildID)
-	if err != nil {
-		return
-	}
-
-	if !mod.Enabled {
-		return
-	}
-
-	switch i.Type {
-	case discordgo.InteractionApplicationCommand:
-		m.handleCommand(s, i)
-	case discordgo.InteractionMessageComponent:
-		m.handleComponent(s, i)
-	case discordgo.InteractionModalSubmit:
-		m.handleModal(s, i)
-	}
-}
-
-func (m *Verification) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-}
-
-func (m *Verification) handleComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cid := i.MessageComponentData().CustomID
-	switch cid {
-	case CIDVerifyEmailBtn:
-		m.handleCIDVerifyEmailBtn(s, i)
-	case CIDVerifyEmailCodeBtn:
-		m.handleCIDVerifyEmailCodeBtn(s, i)
-	default:
-		m.log.Error().
-			Str("custom_id", cid).
-			Msg("unhandled interaction")
-	}
-}
-
-func (m *Verification) handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cid := i.MessageComponentData().CustomID
-	switch cid {
-	case CIDVerifyEmailModal:
-		m.handleCIDVerifyEmailModal(s, i)
-	case CIDVerifyEmailCodeModal:
-		m.handleCIDVerifyEmailCodeModal(s, i)
-	default:
-		m.log.Error().
-			Str("custom_id", cid).
-			Msg("unhandled interaction")
-	}
-}
 
 func (m *Verification) handleCIDVerifyEmailBtn(
 	s *discordgo.Session,
@@ -127,8 +79,15 @@ func (m *Verification) handleCIDVerifyEmailModal(
 	recipient += AllowedDomain
 	log.Debug().Msgf("received email from user: %s", recipient)
 
+	// Not sure why I inlined this, ehhh can organize later
+	genCode := func() string {
+		rand.Seed(time.Now().UnixNano())
+		code := rand.Intn(900000) + 100000
+		return fmt.Sprintf("%06d", code)
+	}
+
 	// Log email to DB
-	code := genCode6()
+	code := genCode()
 	e := &database.Email{
 		GuildSnowflake: m.guildSnowflake,
 		UserSnowflake:  i.Member.User.ID,
@@ -152,7 +111,7 @@ func (m *Verification) handleCIDVerifyEmailModal(
 	}
 
 	// Send email
-	sent, err := m.email.Emails.Send(params)
+	sent, err := m.emailClient.Emails.Send(params)
 	if err != nil {
 		log.Error().Err(err).Msg("critical error sending email")
 		return

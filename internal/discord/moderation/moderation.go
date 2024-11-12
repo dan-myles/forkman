@@ -236,3 +236,30 @@ func (m *Moderation) Enable() error {
 
 	return nil
 }
+
+func (m *Moderation) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	mod, err := m.repo.ReadModule(i.GuildID)
+	if err != nil {
+		return
+	}
+
+	if !mod.Enabled {
+		return
+	}
+
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		m.handleCommand(s, i)
+	}
+}
+
+func (m *Moderation) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	name := i.ApplicationCommandData().Name
+
+	switch name {
+	case "mute":
+		m.mute(s, i)
+	case "nuke":
+		m.nuke(s, i)
+	}
+}

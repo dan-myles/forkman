@@ -45,8 +45,11 @@ func (s *Server) registerRoutes() http.Handler {
 
 		r.Route("/{guildSnowflake}", func(r chi.Router) {
 			r.Use(middleware.GuildSnowflake)
-			r.Get("/module/moderation/disable", s.disableModerationModule)
 			r.Get("/module/moderation/enable", s.enableModerationModule)
+			r.Get("/module/moderation/disable", s.disableModerationModule)
+
+			r.Get("/module/verification/enable", s.enableVerificationModule)
+			r.Get("/module/verification/disable", s.disableVerificationModule)
 			r.Get("/module/verification/panel/send/{channelId}", s.sendVerificationPanel)
 		})
 	})
