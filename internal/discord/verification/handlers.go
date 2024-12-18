@@ -1,6 +1,7 @@
 package verification
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/bwmarrin/discordgo"
-	"github.com/resend/resend-go/v2"
 )
 
 // TODO: Some values are hard coded here just for brevity.
@@ -101,22 +101,16 @@ func (m *Verification) handleCIDVerifyEmailModal(
 		log.Error().Err(err).Msg("critical error inserting email into database")
 	}
 
-	// Prepare email
-	params := &resend.SendEmailRequest{
-		From:    "Forkman <no-reply@forkman.xyz>",
-		To:      []string{recipient},
-		Subject: "Devil2Devil Verification",
-		Html:    "Verficiation Code: " + code,
-		Text:    "Verification Code:" + code,
-	}
+	sender := "forkman@devil2devil.asu.edu"
+	subject := "Devil2Devil Verification"
+	body := "Verficiation Code: " + code
 
-	// Send email
-	sent, err := m.emailClient.Emails.Send(params)
+	// Send the email
+	err = sendEmail(context.TODO(), m.emailClient, sender, recipient, subject, body)
 	if err != nil {
 		log.Error().Err(err).Msg("critical error sending email")
-		return
 	}
-	log.Info().Msgf("sent email with id: %s", sent.Id)
+	log.Info().Msgf("sent email with id to: %s", recipient)
 
 	// Respond with embed and button
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

@@ -6,9 +6,12 @@ import (
 	"github.com/avvo-na/forkman/common/config"
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/avvo-na/forkman/internal/discord/moderation"
+	"github.com/avvo-na/forkman/internal/discord/qna"
 	"github.com/avvo-na/forkman/internal/discord/verification"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/bwmarrin/discordgo"
-	"github.com/resend/resend-go/v2"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -18,19 +21,22 @@ type Discord struct {
 	db           *gorm.DB
 	log          *zerolog.Logger
 	cfg          *config.SentinelConfig
-	resend       *resend.Client
+	email        *ses.Client
+	bedrock      *bedrockagentruntime.Client
 	moderation   map[string]*moderation.Moderation     /* GuildID -> module*/
 	verification map[string]*verification.Verification /* GuildID -> module */
+	qna          map[string]*qna.QNA                   /* GuildID -> module */
 }
 
 var ErrModuleNotFound = errors.New("module not found")
 
-func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord {
+func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB, acfg aws.Config) *Discord {
 	d := &Discord{
-		db:     db,
-		log:    log,
-		cfg:    cfg,
-		resend: resend.NewClient(cfg.ResendAPIKey),
+		db:      db,
+		log:     log,
+		cfg:     cfg,
+		email:   ses.NewFromConfig(acfg),
+		bedrock: bedrockagentruntime.NewFromConfig(acfg),
 	}
 
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
@@ -47,11 +53,13 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB) *Discord 
 	// Module stores
 	d.moderation = make(map[string]*moderation.Moderation)
 	d.verification = make(map[string]*verification.Verification)
+	d.qna = make(map[string]*qna.QNA)
 
 	// Global handlers
 	s.AddHandler(d.onReadyNotify)
 	s.AddHandler(d.onGuildCreateGuildUpdate)
 	s.AddHandler(d.onInteractionCreate)
+	s.AddHandler(d.onMessageCreate)
 
 	// Open the session
 	log.Info().Msg("Opening discord session")
@@ -83,6 +91,15 @@ func (d *Discord) Close() error {
 
 func (d *Discord) GetSession() *discordgo.Session {
 	return d.session
+}
+
+func (d *Discord) GetQNAModule(guildSnowflake string) (*qna.QNA, error) {
+	mod, ok := d.qna[guildSnowflake]
+	if !ok {
+		return nil, ErrModuleNotFound
+	}
+
+	return mod, nil
 }
 
 func (d *Discord) GetModerationModule(guildSnowflake string) (*moderation.Moderation, error) {
@@ -144,14 +161,21 @@ func (d *Discord) onGuildCreateGuildUpdate(s *discordgo.Session, g *discordgo.Gu
 		return
 	}
 
-	v := verification.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.db, d.resend, d.log)
+	v := verification.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.db, d.email, d.log)
 	if err := v.Load(); err != nil {
 		log.Error().Err(err).Msg("critical error init verification module")
 		return
 	}
 
+	q := qna.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.bedrock, d.cfg.FORUM_CHANNEL_ID, d.cfg.AWS_BEDROCK_KBI, d.db, d.log)
+	if err := q.Load(); err != nil {
+		log.Error().Err(err).Msg("critical error init qna module")
+		return
+	}
+
 	d.moderation[g.ID] = m
 	d.verification[g.ID] = v
+	d.qna[g.ID] = q
 
 	log.Info().Msg("guild instantiation complete")
 }
@@ -159,6 +183,7 @@ func (d *Discord) onGuildCreateGuildUpdate(s *discordgo.Session, g *discordgo.Gu
 func (d *Discord) onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	go d.moderation[i.GuildID].OnInteractionCreate(s, i)
 	go d.verification[i.GuildID].OnInteractionCreate(s, i)
+	go d.qna[i.GuildID].OnInteractionCreate(s, i)
 
 	log := d.log.With().
 		Str("guild_id", i.GuildID).
@@ -183,6 +208,10 @@ func (d *Discord) onInteractionCreate(s *discordgo.Session, i *discordgo.Interac
 			Str("modal_type", i.ModalSubmitData().Type().String()).
 			Str("custom_id", i.ModalSubmitData().CustomID).
 			Logger()
+	case discordgo.InteractionMessageComponent:
+		log = log.With().
+			Str("custom_id", i.MessageComponentData().CustomID).
+			Logger()
 	default:
 		log.Error().Msg("critical: unhandled application interaction")
 		return
@@ -192,4 +221,8 @@ func (d *Discord) onInteractionCreate(s *discordgo.Session, i *discordgo.Interac
 	log = log.With().Str("guild_name", guild.Name).Logger()
 
 	log.Info().Msg("interaction request received")
+}
+
+func (d *Discord) onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	go d.qna[m.GuildID].OnMessageCreate(s, m)
 }

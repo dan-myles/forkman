@@ -13,16 +13,36 @@ import (
 	"github.com/avvo-na/forkman/internal/database"
 	"github.com/avvo-na/forkman/internal/discord"
 	"github.com/avvo-na/forkman/internal/server"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awscfg "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/go-playground/validator/v10"
 )
 
 func main() {
-	// Startup w/ API & Discord
+	// General deps
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv)
 	db := database.New(log)
-	discord := discord.New(cfg, log, db)
+
+	// AWS
+	acfg, err := awscfg.LoadDefaultConfig(context.TODO(),
+		awscfg.WithRegion(cfg.AWS_REGION),
+		awscfg.WithCredentialsProvider(aws.NewCredentialsCache(
+			credentials.NewStaticCredentialsProvider(
+				cfg.AWS_ACCESS_KEY_ID,
+				cfg.AWS_SECRET_ACCESS_KEY,
+				"",
+			),
+		)),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Discord & http server
+	discord := discord.New(cfg, log, db, acfg)
 	server := server.New(cfg, log, valid, discord, db)
 	log.Info().Msg("Initialization complete, starting server!")
 
@@ -66,12 +86,12 @@ func main() {
 
 	// Listen & Serve
 	log.Info().Msgf("Server starting on :%d", cfg.ServerPort)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
 
 	// Wait for shutdown
 	<-shutdown
-  log.Info().Msg("Application shutdown completed!")
+	log.Info().Msg("Application shutdown completed!")
 }

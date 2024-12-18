@@ -1,35 +1,38 @@
-package verification
+package qna
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/avvo-na/forkman/internal/database"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime/types"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
-type VerificationConfig struct {
-	Provider      string `json:"provider"`
-	SenderAddress string `json:"sender_address"`
-}
+type QNAConfig struct{}
 
-type Verification struct {
-	guildName      string
-	guildSnowflake string
-	appId          string
-	session        *discordgo.Session
-	emailClient    *ses.Client
-	repo           *Repository
-	log            *zerolog.Logger
+type QNA struct {
+	guildName       string
+	guildSnowflake  string
+	appId           string
+	session         *discordgo.Session
+	bedrock         *bedrockagentruntime.Client
+	forumChannelId  string
+	knowledgeBaseId string
+	repo            *Repository
+	log             *zerolog.Logger
 }
 
 const (
-	name        = "Verification"
-	description = "Protect against raids!"
+	name        = "QNA"
+	description = "AI Q&A for your server!"
+	modelId     = "amazon.nova-pro-v1:0"
 )
 
 var (
@@ -42,34 +45,38 @@ func New(
 	guildSnowflake string,
 	appId string,
 	session *discordgo.Session,
+	bedrock *bedrockagentruntime.Client,
+	forumChannelId string,
+	knowledgeBaseId string,
 	db *gorm.DB,
-	email *ses.Client,
 	log *zerolog.Logger,
-) *Verification {
+) *QNA {
 	l := log.With().
 		Str("module", name).
-		Str("guild_snowflake", guildSnowflake).
 		Str("guild_name", guildName).
+		Str("guild_snowflake", guildSnowflake).
 		Logger()
 
-	return &Verification{
-		guildName:      guildName,
-		guildSnowflake: guildSnowflake,
-		appId:          appId,
-		session:        session,
-		emailClient:    email,
-		repo:           NewRepository(db),
-		log:            &l,
+	return &QNA{
+		guildName:       guildName,
+		guildSnowflake:  guildSnowflake,
+		appId:           appId,
+		session:         session,
+		bedrock:         bedrock,
+		forumChannelId:  forumChannelId,
+		knowledgeBaseId: knowledgeBaseId,
+		repo:            NewRepository(db),
+		log:             &l,
 	}
 }
 
-func (m *Verification) Load() error {
+func (m *QNA) Load() error {
 	mod, err := m.repo.ReadModule(m.guildSnowflake)
 	if err == gorm.ErrRecordNotFound {
 		m.log.Debug().Msg("module not found, creating...")
 
 		// Default general config (empty)
-		cfgJson, _ := json.Marshal(VerificationConfig{Provider: "", SenderAddress: ""})
+		cfgJson, _ := json.Marshal(QNAConfig{})
 
 		// Default command config (all enabled)
 		cmdMap := make(map[string]bool)
@@ -78,6 +85,7 @@ func (m *Verification) Load() error {
 		}
 		cmdJson, _ := json.Marshal(cmdMap)
 
+		// Default module config
 		insert := &database.Module{
 			GuildSnowflake: m.guildSnowflake,
 			Name:           name,
@@ -88,8 +96,14 @@ func (m *Verification) Load() error {
 		}
 
 		if mod, err = m.repo.CreateModule(insert); err != nil {
-			return fmt.Errorf("unable to create verification module: %w", err)
+			return fmt.Errorf("unable to create qna module: %w", err)
 		}
+	}
+
+	// If we are not enabled, don't do anything!
+	if !mod.Enabled {
+		m.log.Debug().Msg("module disabled, skipping...")
+		return nil
 	}
 
 	// Grab command state
@@ -110,15 +124,9 @@ func (m *Verification) Load() error {
 				return fmt.Errorf("unable to update module: %w", err)
 			}
 
-			m.log.Info().Msgf("added new command %s to DB state", command.Name)
+			m.log.Info().Msgf("Added new command %s to DB state", command.Name)
 			continue
 		}
-	}
-
-	// If we are not enabled, don't do anything!
-	if !mod.Enabled {
-		m.log.Debug().Msg("module disabled, skipping...")
-		return nil
 	}
 
 	// TODO: only register commands that are not registered on remote
@@ -144,7 +152,7 @@ func (m *Verification) Load() error {
 	return nil
 }
 
-func (m *Verification) Disable() error {
+func (m *QNA) Disable() error {
 	// Read DB state
 	mod, err := m.repo.ReadModule(m.guildSnowflake)
 	if err != nil {
@@ -189,7 +197,7 @@ func (m *Verification) Disable() error {
 	return nil
 }
 
-func (m *Verification) Enable() error {
+func (m *QNA) Enable() error {
 	// Read DB state
 	mod, err := m.repo.ReadModule(m.guildSnowflake)
 	if err != nil {
@@ -237,60 +245,82 @@ func (m *Verification) Enable() error {
 	return nil
 }
 
-func (m *Verification) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (m *QNA) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	mod, err := m.repo.ReadModule(i.GuildID)
 	if err != nil {
 		return
 	}
 
 	if !mod.Enabled {
-		m.log.Info().Msg("interaction request interuppted, module is disabled")
 		return
 	}
 
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
 		m.handleCommand(s, i)
-	case discordgo.InteractionMessageComponent:
-		m.handleComponent(s, i)
-	case discordgo.InteractionModalSubmit:
-		m.handleModal(s, i)
 	}
 }
 
-func (m *Verification) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (m *QNA) OnMessageCreate(s *discordgo.Session, msg *discordgo.MessageCreate) {
+	mod, err := m.repo.ReadModule(msg.GuildID)
+	if err != nil {
+		return
+	}
+
+	if !mod.Enabled {
+		return
+	}
+
+	m.handleQNARequest(s, msg)
+}
+
+func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreate) {
+	channel, err := m.session.Channel(msg.ChannelID)
+	if err != nil {
+		m.log.Error().Err(err).Msg("critical error getting channel")
+		return
+	}
+
+	if channel.Type != discordgo.ChannelTypeGuildPublicThread {
+		return
+	}
+
+	// check if the user is a bot or not
+	if msg.Author.Bot {
+		return
+	}
+
+	// if channel.MessageCount != 0 {
+	// 	return
+	// }
+
+	s.ChannelMessageSend(msg.ChannelID, "Hello, I will be responding to your message in a few seconds!")
+	query := channel.Name + " " + msg.Content
+
+	input := &bedrockagentruntime.RetrieveAndGenerateInput{
+		Input: &types.RetrieveAndGenerateInput{
+			Text: aws.String(query),
+		},
+		RetrieveAndGenerateConfiguration: &types.RetrieveAndGenerateConfiguration{
+			Type: types.RetrieveAndGenerateTypeKnowledgeBase,
+			KnowledgeBaseConfiguration: &types.KnowledgeBaseRetrieveAndGenerateConfiguration{
+				ModelArn:        aws.String("amazon.nova-pro-v1:0"),
+				KnowledgeBaseId: aws.String(m.knowledgeBaseId),
+			},
+		},
+	}
+
+	response, err := m.bedrock.RetrieveAndGenerate(context.Background(), input)
+  if response.Output != nil {
+    s.ChannelMessageSend(msg.ChannelID, *response.Output.Text)
+  }
+}
+
+func (m *QNA) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	name := i.ApplicationCommandData().Name
 
 	switch name {
-	case "email":
-		m.email(s, i)
-	}
-}
-
-func (m *Verification) handleComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cid := i.MessageComponentData().CustomID
-	switch cid {
-	case CIDVerifyEmailBtn:
-		m.handleCIDVerifyEmailBtn(s, i)
-	case CIDVerifyEmailCodeBtn:
-		m.handleCIDVerifyEmailCodeBtn(s, i)
 	default:
-		m.log.Error().
-			Str("custom_id", cid).
-			Msg("unhandled interaction")
-	}
-}
-
-func (m *Verification) handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cid := i.ModalSubmitData().CustomID
-	switch cid {
-	case CIDVerifyEmailModal:
-		m.handleCIDVerifyEmailModal(s, i)
-	case CIDVerifyEmailCodeModal:
-		m.handleCIDVerifyEmailCodeModal(s, i)
-	default:
-		m.log.Error().
-			Str("custom_id", cid).
-			Msg("unhandled interaction")
+		m.log.Info().Msg("command not found")
 	}
 }

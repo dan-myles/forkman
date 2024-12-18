@@ -8,6 +8,7 @@ import (
 )
 
 type SentinelConfig struct {
+	// Server Settings
 	DiscordAppID        string        `env:"DISCORD_APP_ID,required,notEmpty"`
 	DiscordClientID     string        `env:"DISCORD_CLIENT_ID,required,notEmpty"`
 	DiscordClientSecret string        `env:"DISCORD_CLIENT_SECRET,required,notEmpty"`
@@ -21,10 +22,20 @@ type SentinelConfig struct {
 	ServerAuthExpiry    time.Duration `env:"SERVER_AUTH_EXPIRY,required,notEmpty"`
 	LogLevel            string        `env:"LOG_LEVEL,required,notEmpty"`
 	GoEnv               string        `env:"GO_ENV,required,notEmpty"`
-	ResendAPIKey        string        `env:"RESEND_API_KEY,required,notEmpty"`
-	LogChannelID        string        `env:"LOG_CHANNEL_ID,required,notEmpty"`
-	RoleToRemove        string        `env:"ROLE_TO_REMOVE,required,notEmpty"`
-	RoleToAdd           string        `env:"ROLE_TO_ADD,required,notEmpty"`
+
+	// AWS
+	AWS_ACCESS_KEY_ID     string `env:"AWS_ACCESS_KEY_ID,required,notEmpty"`
+	AWS_SECRET_ACCESS_KEY string `env:"AWS_SECRET_ACCESS_KEY,required,notEmpty"`
+	AWS_REGION            string `env:"AWS_REGION,required,notEmpty"`
+	AWS_BEDROCK_KBI       string `env:"AWS_BEDROCK_KBI,required,notEmpty"` // Knowledge Base ID
+
+	// Verification Settings
+	LogChannelID string `env:"LOG_CHANNEL_ID,required,notEmpty"`
+	RoleToRemove string `env:"ROLE_TO_REMOVE,required,notEmpty"`
+	RoleToAdd    string `env:"ROLE_TO_ADD,required,notEmpty"`
+
+	// QNA Settings
+	FORUM_CHANNEL_ID string `env:"FORUM_CHANNEL_ID,required,notEmpty"`
 }
 
 func New() *SentinelConfig {
