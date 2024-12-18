@@ -262,7 +262,7 @@ func (m *QNA) OnInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 }
 
 func (m *QNA) OnMessageCreate(s *discordgo.Session, msg *discordgo.MessageCreate) {
-	if msg == nil {
+	if msg.Author.Bot {
 		return
 	}
 
@@ -286,11 +286,6 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	if channel.Type != discordgo.ChannelTypeGuildPublicThread {
-		return
-	}
-
-	// check if the user is a bot or not
-	if msg.Author.Bot {
 		return
 	}
 
