@@ -262,6 +262,10 @@ func (m *QNA) OnInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 }
 
 func (m *QNA) OnMessageCreate(s *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg == nil {
+		return
+	}
+
 	mod, err := m.repo.ReadModule(msg.GuildID)
 	if err != nil {
 		return
@@ -311,9 +315,9 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	response, err := m.bedrock.RetrieveAndGenerate(context.Background(), input)
-  if response.Output != nil {
-    s.ChannelMessageSend(msg.ChannelID, *response.Output.Text)
-  }
+	if response.Output != nil {
+		s.ChannelMessageSend(msg.ChannelID, *response.Output.Text)
+	}
 }
 
 func (m *QNA) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
