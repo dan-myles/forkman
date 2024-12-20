@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/gob"
 	"net/http"
 	"time"
 
@@ -40,7 +41,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 	// Complete auth
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to complete user auth")
+		log.Error().Err(err).Msg("failed to complete user auth")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -57,7 +58,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 	// Create or update user in database
 	tx := s.db.Begin()
 	if tx.Error != nil {
-		log.Error().Err(tx.Error).Msg("Failed to start transaction")
+		log.Error().Err(tx.Error).Msg("failed to start transaction")
 		http.Error(w, tx.Error.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -82,6 +83,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set user session in cookies
+	gob.Register(map[string]interface{}{})
 	session, _ := gothic.Store.Get(r, sessionKey)
 	session.Values["user"] = user
 	err = session.Save(r, w)
@@ -109,7 +111,7 @@ func (s *Server) authLogout(w http.ResponseWriter, r *http.Request) {
 	// Logout
 	err := gothic.Logout(w, r)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to logout user")
+		log.Error().Err(err).Msg("failed to logout user")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +121,7 @@ func (s *Server) authLogout(w http.ResponseWriter, r *http.Request) {
 	session.Options.MaxAge = -1
 	err = session.Save(r, w)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to clear session")
+		log.Error().Err(err).Msg("failed to clear session")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

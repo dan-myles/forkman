@@ -1,5 +1,5 @@
 import { DiscordLogoIcon } from "@radix-ui/react-icons"
-import { createLazyFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -8,8 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { api } from "@/lib/api"
 
-export const Route = createLazyFileRoute("/")({
+export const Route = createFileRoute("/")({
+  beforeLoad: async () => {
+    const auth = await api.isAuth()
+    if (auth) {
+      throw redirect({
+        to: "/dashboard",
+        search: {
+          redirect: location.href,
+        },
+      })
+    }
+  },
   component: Page,
 })
 

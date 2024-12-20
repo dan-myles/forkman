@@ -1,30 +1,18 @@
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-} from "lucide-react"
+import { ChevronsUpDown, LogOut } from "lucide-react"
+import { useNavigate } from "@tanstack/react-router"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useUserStore } from "@/stores/userStore"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export function NavUser() {
+  const user = useUserStore((state) => state.user)
+  const navigate = useNavigate()
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -37,16 +25,16 @@ export function NavUser({
         >
           <Avatar className="h-7 w-7 rounded-md border">
             <AvatarImage
-              src={user.avatar}
-              alt={user.name}
+              src={user?.AvatarURL}
+              alt={user?.Name}
               className="animate-in fade-in-50 zoom-in-90"
             />
             <AvatarFallback className="rounded-md">CN</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 leading-none">
-            <div className="font-medium">{user.name}</div>
+            <div className="font-medium">{user?.Name}</div>
             <div className="overflow-hidden text-xs text-muted-foreground">
-              <div className="line-clamp-1">{user.email}</div>
+              <div className="truncate">{user?.Email}</div>
             </div>
           </div>
           <ChevronsUpDown
@@ -60,40 +48,15 @@ export function NavUser({
         side="right"
         sideOffset={4}
       >
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div
-            className="flex items-center gap-2 px-1 py-1.5 text-left text-sm
-              transition-all"
-          >
-            <Avatar className="h-7 w-7 rounded-md">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1">
-              <div className="font-medium">{user.name}</div>
-              <div className="overflow-hidden text-xs text-muted-foreground">
-                <div className="line-clamp-1">{user.email}</div>
-              </div>
-            </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="gap-2">
-            <BadgeCheck className="h-4 w-4 text-muted-foreground" />
-            Account
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            Notifications
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2">
+        <DropdownMenuItem
+          className="gap-2"
+          onClick={() => {
+            navigate({
+              // @ts-expect-error - forcefully log out
+              to: "/auth/discord/logout",
+            })
+          }}
+        >
           <LogOut className="h-4 w-4 text-muted-foreground" />
           Log out
         </DropdownMenuItem>

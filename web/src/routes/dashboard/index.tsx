@@ -1,9 +1,21 @@
-import { createLazyFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarLayout, SidebarTrigger } from "@/components/ui/sidebar"
 import { useSidebar } from "@/hooks/use-sidebar"
+import { api } from "@/lib/api"
 
-export const Route = createLazyFileRoute("/dashboard/")({
+export const Route = createFileRoute("/dashboard/")({
+  beforeLoad: async () => {
+    const auth = await api.isAuth()
+    if (!auth) {
+      throw redirect({
+        to: "/",
+        search: {
+          redirect: location.href,
+        },
+      })
+    }
+  },
   component: Page,
 })
 

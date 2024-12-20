@@ -120,6 +120,40 @@ func (d *Discord) GetVerificationModule(guildSnowflake string) (*verification.Ve
 	return mod, nil
 }
 
+func (d *Discord) GetUserAdminServers(userID string) ([]discordgo.UserGuild, error) {
+	// loop through all guilds and check if that user is an admin
+	// if so, add the guild to the list
+	ret := []discordgo.UserGuild{}
+	guilds, err := d.session.UserGuilds(200, "", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, guild := range guilds {
+		member, err := d.session.GuildMember(guild.ID, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		roles, err := d.session.GuildRoles(guild.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, userRole := range member.Roles {
+			for _, guildRole := range roles {
+				if userRole == guildRole.ID {
+					if guildRole.Permissions&discordgo.PermissionAdministrator == discordgo.PermissionAdministrator {
+						ret = append(ret, *guild)
+					}
+				}
+			}
+		}
+	}
+
+	return ret, nil
+}
+
 func (d *Discord) onReadyNotify(s *discordgo.Session, r *discordgo.Ready) {
 	d.log.Info().Msgf("Session has connected to Discord as %s", r.User.String())
 }

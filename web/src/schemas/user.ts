@@ -1,0 +1,45 @@
+import { z } from "zod"
+
+export type User = z.infer<typeof userSchema>
+
+export const userSchema = z.object({
+  RawData: z.object({
+    accent_color: z.null(),
+    avatar: z.string(),
+    avatar_decoration_data: z.object({
+      asset: z.string(),
+      expires_at: z.number(),
+      sku_id: z.string(),
+    }),
+    banner: z.string(),
+    banner_color: z.null(),
+    clan: z.null(),
+    discriminator: z.string(),
+    email: z.string(),
+    flags: z.number(),
+    global_name: z.string(),
+    id: z.string(),
+    locale: z.string(),
+    mfa_enabled: z.boolean(),
+    premium_type: z.number(),
+    primary_guild: z.null(),
+    public_flags: z.number(),
+    username: z.string(),
+    verified: z.boolean(),
+  }),
+  Provider: z.string(),
+  Email: z.string(),
+  Name: z.string(),
+  FirstName: z.string(),
+  LastName: z.string(),
+  NickName: z.string(),
+  Description: z.string(),
+  UserID: z.string(),
+  AvatarURL: z.string(),
+  Location: z.string(),
+  AccessToken: z.string(),
+  AccessTokenSecret: z.string(),
+  RefreshToken: z.string(),
+  ExpiresAt: z.string(),
+  IDToken: z.string(),
+})
