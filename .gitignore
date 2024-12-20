@@ -22,5 +22,6 @@ build/
 *.sln
 *.sw?
 
+package-lock.json
 # forkman stuff
 fork_data/

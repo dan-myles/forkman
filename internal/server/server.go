@@ -32,8 +32,8 @@ func New(
 	db *gorm.DB,
 ) *http.Server {
 	// Setup gothic session store
-	store := gormstore.New(db, []byte(cfg.ServerAuthSecret))
-	store.MaxAge(int(cfg.ServerAuthExpiry.Seconds()))
+	store := gormstore.New(db, []byte(cfg.ServerConfig.AuthSecret))
+	store.MaxAge(int(cfg.ServerConfig.AuthExpiry.Seconds()))
 	store.SessionOpts.Path = "/"
 	store.SessionOpts.HttpOnly = true
 	store.SessionOpts.Secure = true
@@ -46,8 +46,8 @@ func New(
 	// Setup discord provider
 	goth.UseProviders(
 		discordProvider.New(
-			cfg.DiscordClientID,
-			cfg.DiscordClientSecret,
+			cfg.DiscordConfig.ClientID,
+			cfg.DiscordConfig.ClientSecret,
 			"http://localhost:5173/auth/discord/callback", // TODO: DONT HARDCODE THIS
 			discordProvider.ScopeIdentify,
 			discordProvider.ScopeEmail,
@@ -63,11 +63,11 @@ func New(
 
 	// Declare Server config
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.ServerPort),
+		Addr:         fmt.Sprintf(":%d", cfg.ServerConfig.Port),
 		Handler:      s.registerRoutes(),
-		IdleTimeout:  cfg.ServerTimeoutIdle,
-		ReadTimeout:  cfg.ServerTimeoutRead,
-		WriteTimeout: cfg.ServerTimeoutWrite,
+		IdleTimeout:  cfg.ServerConfig.TimeoutIdle,
+		ReadTimeout:  cfg.ServerConfig.TimeoutRead,
+		WriteTimeout: cfg.ServerConfig.TimeoutWrite,
 	}
 
 	return server
