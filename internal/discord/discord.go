@@ -39,7 +39,7 @@ func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB, acfg aws.
 		bedrock: bedrockagentruntime.NewFromConfig(acfg),
 	}
 
-	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
+	s, err := discordgo.New("Bot " + cfg.DiscordConfig.BotToken)
 	if err != nil {
 		panic(err)
 	}
@@ -189,19 +189,19 @@ func (d *Discord) onGuildCreateGuildUpdate(s *discordgo.Session, g *discordgo.Gu
 		return
 	}
 
-	m := moderation.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.db, d.log)
+	m := moderation.New(g.Name, g.ID, d.cfg.DiscordConfig.AppID, d.session, d.db, d.log)
 	if err := m.Load(); err != nil {
 		log.Error().Err(err).Msg("critical error init moderation module")
 		return
 	}
 
-	v := verification.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.db, d.email, d.log)
+	v := verification.New(g.Name, g.ID, d.cfg.DiscordConfig.AppID, d.session, d.db, d.email, d.log)
 	if err := v.Load(); err != nil {
 		log.Error().Err(err).Msg("critical error init verification module")
 		return
 	}
 
-	q := qna.New(g.Name, g.ID, d.cfg.DiscordAppID, d.session, d.bedrock, d.cfg.FORUM_CHANNEL_ID, d.cfg.AWS_BEDROCK_KBI, d.db, d.log)
+	q := qna.New(g.Name, g.ID, d.cfg.DiscordConfig.AppID, d.session, d.bedrock, d.cfg.DiscordConfig.FORUMChannelID, d.cfg.AWSConfig.AWSBedrockKBI, d.db, d.log)
 	if err := q.Load(); err != nil {
 		log.Error().Err(err).Msg("critical error init qna module")
 		return
