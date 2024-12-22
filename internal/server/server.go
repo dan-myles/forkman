@@ -17,11 +17,12 @@ import (
 )
 
 type Server struct {
-	db      *gorm.DB
-	log     *zerolog.Logger
-	valid   *validator.Validate
-	discord *discord.Discord
-	cfg     *config.SentinelConfig
+	db        *gorm.DB
+	log       *zerolog.Logger
+	valid     *validator.Validate
+	discord   *discord.Discord
+	cfg       *config.SentinelConfig
+	startTime time.Time
 }
 
 func New(
@@ -59,6 +60,7 @@ func New(
 		valid:   v,
 		discord: d,
 		cfg:     cfg,
+    startTime: time.Now(),
 	}
 
 	// Declare Server config

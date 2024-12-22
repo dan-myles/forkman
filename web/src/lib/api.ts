@@ -1,8 +1,10 @@
 import { serverListSchema } from "@/schemas/server"
+import { uptimeSchema } from "@/schemas/uptime"
 import { useUserStore } from "@/stores/userStore"
 
 export const api = {
   isAuth,
+  getUptime,
   getServers,
   getStatus,
   restartServer,
@@ -23,24 +25,32 @@ async function isAuth() {
   return true
 }
 
+async function getUptime() {
+  const res = await fetch("/uptime", {
+    method: "GET",
+    credentials: "include",
+  })
+  const json = await res.json()
+  const uptime = uptimeSchema.parse(json)
+  return uptime
+}
+
 async function getServers() {
   const res = await fetch("/api/v1/user/servers", {
     method: "GET",
     credentials: "include",
   })
   const json = await res.json()
-  console.log(json)
   const servers = serverListSchema.parse(json)
   return servers
 }
 
 async function getStatus() {
   try {
-    const res = await fetch("/health", {
+    await fetch("/health", {
       method: "GET",
       credentials: "include",
     })
-    console.log(res)
     return true
   } catch (e) {
     console.error(e)
@@ -50,11 +60,10 @@ async function getStatus() {
 
 async function restartServer() {
   try {
-    const res = await fetch("/api/v1/user/restart", {
+    await fetch("/api/v1/user/restart", {
       method: "POST",
       credentials: "include",
     })
-    console.log(res)
     return true
   } catch (e) {
     console.error(e)

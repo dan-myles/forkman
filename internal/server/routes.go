@@ -34,6 +34,7 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// Health Check
 	r.Get("/health", s.healthCheck)
+  r.Get("/uptime", s.uptime)
 
 	// Auth Routes
 	r.Route("/auth", func(r chi.Router) {

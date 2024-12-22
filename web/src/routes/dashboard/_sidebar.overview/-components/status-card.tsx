@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { api } from "@/lib/api"
 
-export function StatusBadge() {
+export function StatusCard() {
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function StatusBadge() {
 
   return (
     <Card className="max-w-52 p-4 flex-grow">
-      <CardTitle className="flex justify-between pb-2">
+      <CardTitle className="flex justify-between pb-2 text-lg">
         <p>Status</p>
         <div>
           <Dialog>
