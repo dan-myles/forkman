@@ -4,6 +4,8 @@ import { useUserStore } from "@/stores/userStore"
 export const api = {
   isAuth,
   getServers,
+  getStatus,
+  restartServer,
 }
 
 async function isAuth() {
@@ -30,4 +32,32 @@ async function getServers() {
   console.log(json)
   const servers = serverListSchema.parse(json)
   return servers
+}
+
+async function getStatus() {
+  try {
+    const res = await fetch("/health", {
+      method: "GET",
+      credentials: "include",
+    })
+    console.log(res)
+    return true
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+async function restartServer() {
+  try {
+    const res = await fetch("/api/v1/user/restart", {
+      method: "POST",
+      credentials: "include",
+    })
+    console.log(res)
+    return true
+  } catch (e) {
+    console.error(e)
+    return false
+  }
 }

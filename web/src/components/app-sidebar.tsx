@@ -1,6 +1,5 @@
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
+import { NavSelection } from "@/components/nav-selection"
 import { NavTeamSwitcher } from "@/components/nav-team-switcher"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -26,6 +25,9 @@ export function AppSidebar() {
         <SidebarItem>
           <SidebarLabel>Platform</SidebarLabel>
           <NavMain />
+        </SidebarItem>
+        <SidebarItem className="mt-auto">
+          <NavSelection />
         </SidebarItem>
       </SidebarContent>
       <SidebarFooter>

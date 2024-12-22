@@ -32,6 +32,9 @@ func (s *Server) registerRoutes() http.Handler {
 		})
 	}
 
+	// Health Check
+	r.Get("/health", s.healthCheck)
+
 	// Auth Routes
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/{provider}/login", s.authLogin)
@@ -47,7 +50,7 @@ func (s *Server) registerRoutes() http.Handler {
 		// User API
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/session", s.sessionInfo)
-      r.Get("/servers", s.serversWithAdmin)
+			r.Get("/servers", s.serversWithAdmin)
 		})
 
 		// Snowflake API

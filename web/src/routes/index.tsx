@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
     const auth = await api.isAuth()
     if (auth) {
       throw redirect({
-        to: "/dashboard",
+        to: "/dashboard/overview",
         search: {
           redirect: location.href,
         },
