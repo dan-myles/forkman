@@ -5,10 +5,6 @@ set -e
 
 echo "Starting deployment process..."
 
-# Step 1: Pull the latest changes from Git
-echo "Pulling latest changes from Git..."
-git pull origin main || { echo "Failed to pull from Git. Exiting..."; exit 1; }
-
 # Step 2: Clean up old Docker images named 'forkman'
 echo "Cleaning up old Docker images..."
 docker images -q forkman | xargs -r docker rmi -f
