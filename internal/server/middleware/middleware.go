@@ -6,20 +6,24 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/avvo-na/forkman/internal/server/common/err"
+	"github.com/avvo-na/forkman/internal/discord"
+	e "github.com/avvo-na/forkman/internal/server/common/err"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/rs/zerolog"
 )
 
 type Middleware struct {
-	logger *zerolog.Logger
+	logger  *zerolog.Logger
+	discord *discord.Discord
 }
 
-func New(logger *zerolog.Logger) *Middleware {
+func New(logger *zerolog.Logger, discord *discord.Discord) *Middleware {
 	return &Middleware{
-		logger: logger,
+		logger:  logger,
+		discord: discord,
 	}
 }
 
@@ -97,7 +101,7 @@ func (m *Middleware) AuthProvider(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 		if provider == "" {
-			err.ServerError(w, err.ErrAuthProviderNotFound)
+			e.ServerError(w, e.ErrAuthProviderNotFound)
 			return
 		}
 
@@ -122,11 +126,35 @@ func (m *Middleware) GuildSnowflake(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gs := chi.URLParam(r, "guildSnowflake")
 		if gs == "" {
-			err.BadRequest(w, err.ErrGuildNotFound)
+			e.BadRequest(w, e.ErrGuildNotFound)
 			return
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), "guildSnowflake", gs))
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (m *Middleware) HasPermissionGuildDashboard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	  gs := r.Context().Value("guildSnowflake").(string)
+
+		session, _ := gothic.Store.Get(r, "forkman-user-session")
+		user := session.Values["user"].(goth.User)
+
+		guilds, err := m.discord.GetUserAdminServers(user.UserID)
+		if err != nil {
+			e.ServerError(w, err)
+			return
+		}
+
+		for _, guild := range guilds {
+			if guild.ID == gs {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		e.ServerError(w, e.ErrUnauthorizedGuild)
 	})
 }

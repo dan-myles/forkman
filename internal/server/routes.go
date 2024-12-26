@@ -11,7 +11,7 @@ import (
 
 func (s *Server) registerRoutes() http.Handler {
 	// Init middleware
-	middleware := middleware.New(s.log)
+	middleware := middleware.New(s.log, s.discord)
 
 	// Setup router
 	r := chi.NewRouter()
@@ -34,7 +34,7 @@ func (s *Server) registerRoutes() http.Handler {
 
 	// Health Check
 	r.Get("/health", s.healthCheck)
-  r.Get("/uptime", s.uptime)
+	r.Get("/uptime", s.uptime)
 
 	// Auth Routes
 	r.Route("/auth", func(r chi.Router) {
@@ -51,25 +51,29 @@ func (s *Server) registerRoutes() http.Handler {
 		// User API
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/session", s.sessionInfo)
-			r.Get("/servers", s.serversWithAdmin)
+			r.Get("/servers", s.adminInfo)
 		})
 
 		// Snowflake API
 		r.Route("/{guildSnowflake}", func(r chi.Router) {
 			r.Use(middleware.GuildSnowflake)
+			r.Use(middleware.HasPermissionGuildDashboard)
 
 			// Moderation API
-			r.Get("/module/moderation/enable", s.enableModerationModule)
-			r.Get("/module/moderation/disable", s.disableModerationModule)
+			r.Post("/module/moderation/enable", s.enableModerationModule)
+			r.Post("/module/moderation/disable", s.disableModerationModule)
+      r.Get("/module/moderation/status", s.statusModerationModule)
 
 			// Verification API
-			r.Get("/module/verification/enable", s.enableVerificationModule)
-			r.Get("/module/verification/disable", s.disableVerificationModule)
-			r.Get("/module/verification/panel/send/{channelId}", s.sendVerificationPanel)
+			r.Post("/module/verification/enable", s.enableVerificationModule)
+			r.Post("/module/verification/disable", s.disableVerificationModule)
+			r.Post("/module/verification/panel/send/{channelId}", s.sendVerificationPanel)
+			r.Get("/module/verification/status", s.statusVerificationModule)
 
 			// QNA API
-			r.Get("/module/qna/enable", s.enableQNAModule)
-			r.Get("/module/qna/disable", s.disableQNAModule)
+			r.Post("/module/qna/enable", s.enableQNAModule)
+			r.Post("/module/qna/disable", s.disableQNAModule)
+			r.Get("/module/qna/status", s.statusQNAModule)
 		})
 	})
 

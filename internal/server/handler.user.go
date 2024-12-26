@@ -15,15 +15,15 @@ func (s *Server) sessionInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func (s *Server) serversWithAdmin(w http.ResponseWriter, r *http.Request) {
+func (s *Server) adminInfo(w http.ResponseWriter, r *http.Request) {
 	session, _ := gothic.Store.Get(r, sessionKey)
 	user := session.Values["user"].(goth.User)
 
-  guilds , err := s.discord.GetUserAdminServers(user.UserID)
-  if err != nil {
-    e.ServerError(w, err)
-    return
-  }
+	guilds, err := s.discord.GetUserAdminServers(user.UserID)
+	if err != nil {
+		e.BadRequest(w, err)
+		return
+	}
 
-  json.NewEncoder(w).Encode(guilds)
+	json.NewEncoder(w).Encode(guilds)
 }

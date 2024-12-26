@@ -1,9 +1,9 @@
-import { Power } from "lucide-react"
+"use client"
+
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogClose,
@@ -23,33 +23,45 @@ export function StatusCard() {
     const interval = setInterval(async () => {
       const online = await api.getStatus()
       setIsOnline(online)
-    }, 1000)
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <Card className="max-w-52 p-4 flex-grow">
-      <CardTitle className="flex justify-between pb-2 text-lg">
-        <p>Status</p>
-        <div>
+    <Card className="max-w-md overflow-hidden">
+      <CardHeader
+        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+      >
+        <CardTitle className="text-center text-2xl font-bold">
+          Server Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <p
+            className={`text-lg font-semibold
+              ${isOnline ? "text-green-600" : "text-red-600"}`}
+          >
+            {isOnline ? "Online" : "Offline"}
+          </p>
           <Dialog>
-            <DialogTrigger>
-              <Power className="h-4 w-4" />
+            <DialogTrigger asChild>
+              <Button variant="outline" className="mt-4">
+                Restart Server
+              </Button>
             </DialogTrigger>
             <DialogContent>
+              <DialogTitle>Are you sure?</DialogTitle>
               <DialogHeader>
-                <DialogTitle>Are you sure?</DialogTitle>
                 <DialogDescription>
-                  <p>
-                    This will completely restart the server. This can take
-                    anywhere from a few seconds to a few minutes. Please ensure
-                    this is what you want to do.
-                  </p>
+                  This will completely restart the server. This can take
+                  anywhere from a few seconds to a few minutes. Please ensure
+                  this is what you want to do.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <DialogClose>
+                <DialogClose asChild>
                   <Button
                     variant="destructive"
                     onClick={() => {
@@ -60,31 +72,14 @@ export function StatusCard() {
                     Restart
                   </Button>
                 </DialogClose>
-                <DialogClose>
+                <DialogClose asChild>
                   <Button variant="outline">Cancel</Button>
                 </DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
-      </CardTitle>
-      <CardHeader className="p-2">
-        {isOnline ? (
-          <Badge
-            className="flex h-12 items-center justify-center bg-green-400
-              hover:bg-green-400"
-          >
-            <p className="animate-pulse">Online</p>
-          </Badge>
-        ) : (
-          <Badge
-            className="flex h-12 items-center justify-center bg-red-400
-              hover:bg-red-400"
-          >
-            <p>Offline</p>
-          </Badge>
-        )}
-      </CardHeader>
+      </CardContent>
     </Card>
   )
 }

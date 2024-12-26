@@ -22,7 +22,7 @@ function Layout() {
       >
         <div className="flex flex-row items-center space-y-2 rounded-md p-2">
           <SidebarTrigger />
-          <div className="pb-2 pl-2 text-xl">{title}</div>
+          <div className="pb-2 pl-2 text-2xl">{title}</div>
         </div>
         <Outlet />
       </main>

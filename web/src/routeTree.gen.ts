@@ -14,6 +14,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as UnauthorizedIndexImport } from './routes/unauthorized/index'
 import { Route as DashboardSidebarImport } from './routes/dashboard/_sidebar'
 import { Route as DashboardSidebarOverviewIndexImport } from './routes/dashboard/_sidebar.overview/index'
 
@@ -30,6 +31,11 @@ const DashboardRoute = DashboardImport.update({
 
 const IndexRoute = IndexImport.update({
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const UnauthorizedIndexRoute = UnauthorizedIndexImport.update({
+  path: '/unauthorized/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -69,6 +75,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSidebarImport
       parentRoute: typeof DashboardRoute
     }
+    '/unauthorized/': {
+      id: '/unauthorized/'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/dashboard/_sidebar/overview/': {
       id: '/dashboard/_sidebar/overview/'
       path: '/overview'
@@ -107,12 +120,14 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardSidebarRouteWithChildren
+  '/unauthorized': typeof UnauthorizedIndexRoute
   '/dashboard/overview': typeof DashboardSidebarOverviewIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardSidebarRouteWithChildren
+  '/unauthorized': typeof UnauthorizedIndexRoute
   '/dashboard/overview': typeof DashboardSidebarOverviewIndexRoute
 }
 
@@ -121,19 +136,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/_sidebar': typeof DashboardSidebarRouteWithChildren
+  '/unauthorized/': typeof UnauthorizedIndexRoute
   '/dashboard/_sidebar/overview/': typeof DashboardSidebarOverviewIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/dashboard/overview'
+  fullPaths: '/' | '/dashboard' | '/unauthorized' | '/dashboard/overview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/dashboard/overview'
+  to: '/' | '/dashboard' | '/unauthorized' | '/dashboard/overview'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/dashboard/_sidebar'
+    | '/unauthorized/'
     | '/dashboard/_sidebar/overview/'
   fileRoutesById: FileRoutesById
 }
@@ -141,11 +158,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  UnauthorizedIndexRoute: typeof UnauthorizedIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  UnauthorizedIndexRoute: UnauthorizedIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -161,7 +180,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/dashboard"
+        "/dashboard",
+        "/unauthorized/"
       ]
     },
     "/": {
@@ -179,6 +199,9 @@ export const routeTree = rootRoute
       "children": [
         "/dashboard/_sidebar/overview/"
       ]
+    },
+    "/unauthorized/": {
+      "filePath": "unauthorized/index.tsx"
     },
     "/dashboard/_sidebar/overview/": {
       "filePath": "dashboard/_sidebar.overview/index.tsx",

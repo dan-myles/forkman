@@ -237,6 +237,19 @@ func (m *Verification) Enable() error {
 	return nil
 }
 
+func (m *Verification) Status() (bool, error) {
+	mod, err := m.repo.ReadModule(m.guildSnowflake)
+	if err != nil {
+		return false, err
+	}
+
+	if !mod.Enabled {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (m *Verification) OnInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	mod, err := m.repo.ReadModule(i.GuildID)
 	if err != nil {

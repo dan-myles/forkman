@@ -14,7 +14,7 @@ func New(goEnv string) *zerolog.Logger {
 	case "development":
 		return dev()
 	case "production":
-		return prod()
+		return dev()
 	default:
 		panic("Unknown environment, please check your configuration file")
 	}

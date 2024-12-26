@@ -48,18 +48,14 @@ export function NavUser() {
         side="right"
         sideOffset={4}
       >
-        <DropdownMenuItem
-          className="gap-2"
-          onClick={() => {
-            navigate({
-              // @ts-expect-error - forcefully log out
-              to: "/auth/discord/logout",
-            })
-          }}
-        >
-          <LogOut className="h-4 w-4 text-muted-foreground" />
-          Log out
-        </DropdownMenuItem>
+        <a href="/auth/discord/logout">
+          <DropdownMenuItem
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4 text-muted-foreground" />
+            Log out
+          </DropdownMenuItem>
+        </a>
       </DropdownMenuContent>
     </DropdownMenu>
   )
