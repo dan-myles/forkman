@@ -9,16 +9,17 @@ RUN pnpm install -g pnpm
 WORKDIR /app
 COPY . .
 WORKDIR /app/web
+RUN rm -rf node_modules
 RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
 # Build the Go app
-FROM golang:1.22 AS go-builder
+FROM golang:1.23.1 AS go-builder
 COPY --from=vite-builder /app /app
 WORKDIR /app
 RUN go mod download
-RUN CGO_ENABLED=0 go build -o sentinel ./cmd/sentinel/main.go
+RUN CGO_ENABLED=0 go build -o forkman ./cmd/forkman/main.go
 
 # Run the app
 EXPOSE 8080
-CMD ["./sentinel"]
+CMD ["./forkman"]

@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type SentinelConfig struct {
+type ForkConfig struct {
 	// Server Settings
 	DiscordAppID        string        `env:"DISCORD_APP_ID,required,notEmpty"`
 	DiscordClientID     string        `env:"DISCORD_CLIENT_ID,required,notEmpty"`
@@ -38,13 +38,13 @@ type SentinelConfig struct {
 	FORUM_CHANNEL_ID string `env:"FORUM_CHANNEL_ID,required,notEmpty"`
 }
 
-func New() *SentinelConfig {
+func New() *ForkConfig {
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	cfg, err := env.ParseAs[SentinelConfig]()
+	cfg, err := env.ParseAs[ForkConfig]()
 	if err != nil {
 		panic(err)
 	}

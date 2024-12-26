@@ -21,12 +21,12 @@ type Server struct {
 	log       *zerolog.Logger
 	valid     *validator.Validate
 	discord   *discord.Discord
-	cfg       *config.SentinelConfig
+	cfg       *config.ForkConfig
 	startTime time.Time
 }
 
 func New(
-	cfg *config.SentinelConfig,
+	cfg *config.ForkConfig,
 	l *zerolog.Logger,
 	v *validator.Validate,
 	d *discord.Discord,

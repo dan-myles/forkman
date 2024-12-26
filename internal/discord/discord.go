@@ -20,7 +20,7 @@ type Discord struct {
 	session      *discordgo.Session
 	db           *gorm.DB
 	log          *zerolog.Logger
-	cfg          *config.SentinelConfig
+	cfg          *config.ForkConfig
 	email        *ses.Client
 	bedrock      *bedrockagentruntime.Client
 	moderation   map[string]*moderation.Moderation     /* GuildID -> module*/
@@ -30,7 +30,7 @@ type Discord struct {
 
 var ErrModuleNotFound = errors.New("module not found")
 
-func New(cfg *config.SentinelConfig, log *zerolog.Logger, db *gorm.DB, acfg aws.Config) *Discord {
+func New(cfg *config.ForkConfig, log *zerolog.Logger, db *gorm.DB, acfg aws.Config) *Discord {
 	d := &Discord{
 		db:      db,
 		log:     log,
