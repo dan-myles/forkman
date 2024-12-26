@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  sentinel:
+  prod:
     image: forkman
     ports:
       - "8080:8080"
