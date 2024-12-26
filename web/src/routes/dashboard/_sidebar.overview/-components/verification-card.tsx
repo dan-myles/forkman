@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { api } from "@/lib/api"
-import { cn } from "@/lib/utils"
 
 export function VerificationCard() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null)

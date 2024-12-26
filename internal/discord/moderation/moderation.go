@@ -136,7 +136,7 @@ func (m *Moderation) Load() error {
 			Msg("command enabled")
 	}
 
-	m.log.Info().Msgf("module %s loaded", mod.Name)
+	m.log.Debug().Msgf("module %s loaded", mod.Name)
 	return nil
 }
 

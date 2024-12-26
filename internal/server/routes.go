@@ -1,13 +1,16 @@
 package server
 
 import (
+	"embed"
+	"io/fs"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/avvo-na/forkman/internal/server/middleware"
 	"github.com/go-chi/chi/v5"
 )
+
+//go:embed dist/*
+var distFS embed.FS
 
 func (s *Server) registerRoutes() http.Handler {
 	// Init middleware
@@ -19,17 +22,20 @@ func (s *Server) registerRoutes() http.Handler {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 
-	// Serve the Frontend :D
-	// TODO: embed the frontend into the binary
-	workdir, _ := os.Getwd()
-	fileDir := http.Dir(filepath.Join(workdir, "fork_data/static"))
-	r.Get("/*", http.FileServer(fileDir).ServeHTTP)
-
-	// If in development, redirect to the frontend vite server
-	if s.cfg.GoEnv == "development" {
+	switch s.cfg.GoEnv {
+	case "development":
 		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "http://localhost:5173/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
 		})
+	case "production":
+		build, err := fs.Sub(distFS, "dist")
+		if err != nil {
+			panic(err)
+		}
+		webFS := http.FS(build)
+		r.Get("/*", http.FileServer(webFS).ServeHTTP)
+	default:
+		panic("unknown environment")
 	}
 
 	// Health Check
@@ -62,7 +68,7 @@ func (s *Server) registerRoutes() http.Handler {
 			// Moderation API
 			r.Post("/module/moderation/enable", s.enableModerationModule)
 			r.Post("/module/moderation/disable", s.disableModerationModule)
-      r.Get("/module/moderation/status", s.statusModerationModule)
+			r.Get("/module/moderation/status", s.statusModerationModule)
 
 			// Verification API
 			r.Post("/module/verification/enable", s.enableVerificationModule)

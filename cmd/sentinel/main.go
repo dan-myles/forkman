@@ -23,7 +23,7 @@ func main() {
 	// General deps
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New()
-	log := logger.New(cfg.GoEnv)
+	log := logger.New(cfg.GoEnv, cfg.LogLevel)
 	db := database.New(log)
 
 	// AWS
@@ -44,7 +44,6 @@ func main() {
 	// Discord & http server
 	discord := discord.New(cfg, log, db, acfg)
 	server := server.New(cfg, log, valid, discord, db)
-	log.Info().Msg("Initialization complete, starting server!")
 
 	// Cleanup on Interrupt/SIGTERM
 	// We need to catch both incase we're running on Windows

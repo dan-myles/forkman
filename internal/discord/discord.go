@@ -211,7 +211,7 @@ func (d *Discord) onGuildCreateGuildUpdate(s *discordgo.Session, g *discordgo.Gu
 	d.verification[g.ID] = v
 	d.qna[g.ID] = q
 
-	log.Info().Msg("guild instantiation complete")
+	log.Debug().Msg("guild instantiation complete")
 }
 
 func (d *Discord) onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {

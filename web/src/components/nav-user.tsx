@@ -1,5 +1,4 @@
 import { ChevronsUpDown, LogOut } from "lucide-react"
-import { useNavigate } from "@tanstack/react-router"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -11,7 +10,6 @@ import { useUserStore } from "@/stores/userStore"
 
 export function NavUser() {
   const user = useUserStore((state) => state.user)
-  const navigate = useNavigate()
 
   return (
     <DropdownMenu>

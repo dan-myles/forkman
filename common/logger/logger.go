@@ -9,18 +9,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func New(goEnv string) *zerolog.Logger {
+func New(goEnv string, level string) *zerolog.Logger {
 	switch goEnv {
 	case "development":
-		return dev()
+		return dev(level)
 	case "production":
-		return dev()
+		return dev(level)
 	default:
 		panic("Unknown environment, please check your configuration file")
 	}
 }
 
-func dev() *zerolog.Logger {
+func dev(level string) *zerolog.Logger {
 	// Default to console output
 	output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	output.NoColor = false
@@ -93,6 +93,25 @@ func dev() *zerolog.Logger {
 
 	// Initialize the logger
 	logger := zerolog.New(output).With().Timestamp().Caller().Logger().Level(zerolog.DebugLevel)
+
+	switch level {
+	case "trace":
+		logger = logger.Level(zerolog.TraceLevel)
+	case "debug":
+		logger = logger.Level(zerolog.DebugLevel)
+	case "info":
+		logger = logger.Level(zerolog.InfoLevel)
+	case "warn":
+		logger = logger.Level(zerolog.WarnLevel)
+	case "error":
+		logger = logger.Level(zerolog.ErrorLevel)
+	case "fatal":
+		logger = logger.Level(zerolog.FatalLevel)
+	case "panic":
+		logger = logger.Level(zerolog.PanicLevel)
+	default:
+		logger = logger.Level(zerolog.DebugLevel)
+	}
 
 	return &logger
 }
