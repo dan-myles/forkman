@@ -15,7 +15,7 @@ docker build -t forkman .
 
 # Step 4: Start the service with Docker Compose
 echo "Stopping any existing containers..."
-docker-compose down
+docker compose down
 
 
 echo "----------------------------------"
