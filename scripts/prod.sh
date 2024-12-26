@@ -18,12 +18,11 @@ echo "Building new Docker image..."
 docker build -t forkman .
 
 # Step 4: Start the service with Docker Compose
-echo "Starting service with Docker Compose..."
+echo "Stopping any existing containers..."
 docker-compose down
-docker-compose up -d
 
-# Step 5: Verify the deployment
-echo "Verifying the running containers..."
-docker ps | grep forkman
 
-echo "Deployment completed successfully!"
+echo "----------------------------------"
+echo "SUCCESFULLY BUILT DOCKER IMAGE"
+echo "Please use docker-compose to start the service"
+echo "----------------------------------"

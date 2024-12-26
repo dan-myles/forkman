@@ -7,7 +7,7 @@ import react from "@vitejs/plugin-react"
 export default defineConfig({
   plugins: [TanStackRouterVite(), react()],
   build: {
-    outDir: "../internal/server/dist",
+    outDir: "dist/",
   },
   resolve: {
     alias: {
