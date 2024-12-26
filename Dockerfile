@@ -6,7 +6,6 @@ RUN corepack enable
 RUN pnpm install -g pnpm
 
 # Build the Vite bundle
-WORKDIR /app
 COPY . .
 WORKDIR /app/web
 RUN rm -rf node_modules
@@ -15,10 +14,14 @@ RUN pnpm run build
 
 # Build the Go app
 FROM golang:1.23.1 AS go-builder
-COPY --from=vite-builder /app /app
+COPY ./internal /app/internal
+COPY ./cmd /app/cmd
+COPY ./common /app/common
+COPY ./go.mod /app/go.mod
+COPY ./go.sum /app/go.sum
 WORKDIR /app
 RUN go mod download
-RUN CGO_ENABLED=0 go build -o forkman ./cmd/forkman/main.go
+RUN go build -o forkman ./cmd/forkman/main.go
 
 # Run the app
 EXPOSE 8080

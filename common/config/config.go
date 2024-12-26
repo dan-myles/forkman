@@ -39,11 +39,7 @@ type ForkConfig struct {
 }
 
 func New() *ForkConfig {
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-
+	godotenv.Load()
 	cfg, err := env.ParseAs[ForkConfig]()
 	if err != nil {
 		panic(err)

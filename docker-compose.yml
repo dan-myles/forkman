@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   sentinel:
-    image: forkman-image
+    image: forkman
     ports:
       - "8080:8080"
     volumes:
       - ./fork_data:/app/fork_data
     command: ["./forkman"]
+    env_file:
+      - .env
