@@ -20,10 +20,6 @@ func (s *Server) adminInfo(w http.ResponseWriter, r *http.Request) {
 	user := session.Values["user"].(goth.User)
 
 	guilds, err := s.discord.GetUserAdminServers(user.UserID)
-	s.log.Info().Msgf("user %s has %d admin servers", user.UserID, len(guilds))
-  for _, guild := range guilds {
-    s.log.Info().Msgf("admin server: %s", guild.ID)
-  }
 	if err != nil {
 		e.BadRequest(w, err)
 		return

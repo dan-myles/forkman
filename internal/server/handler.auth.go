@@ -45,6 +45,7 @@ func (s *Server) authCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	s.log.Info().Msg("Creating or updating user in database!!!!!!!")
 
 	// Create user object
 	dbUser := database.User{
