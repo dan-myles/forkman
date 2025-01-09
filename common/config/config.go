@@ -20,6 +20,7 @@ type ForkConfig struct {
 	ServerTimeoutIdle   time.Duration `env:"SERVER_TIMEOUT_IDLE,required,notEmpty"`
 	ServerAuthSecret    string        `env:"SERVER_AUTH_SECRET,required,notEmpty"`
 	ServerAuthExpiry    time.Duration `env:"SERVER_AUTH_EXPIRY,required,notEmpty"`
+  ServerAuthCallbackURI string        `env:"SERVER_AUTH_CALLBACK_URI,required,notEmpty"`
 	LogLevel            string        `env:"LOG_LEVEL,required,notEmpty"`
 	GoEnv               string        `env:"GO_ENV,required,notEmpty"`
 

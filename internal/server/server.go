@@ -49,7 +49,7 @@ func New(
 		discordProvider.New(
 			cfg.DiscordClientID,
 			cfg.DiscordClientSecret,
-			"http://localhost:5173/auth/discord/callback", // TODO: DONT HARDCODE THIS
+			cfg.ServerAuthCallbackURI,
 			discordProvider.ScopeIdentify,
 			discordProvider.ScopeEmail,
 		))
