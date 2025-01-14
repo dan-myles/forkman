@@ -302,9 +302,9 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 		return
 	}
 
-	// if channel.MessageCount != 0 {
-	// 	return
-	// }
+	if channel.MessageCount != 0 {
+		return
+	}
 
 	s.ChannelMessageSend(msg.ChannelID, "Hello, I will be responding to your message in a few seconds!")
 	query := channel.Name + " " + msg.Content
