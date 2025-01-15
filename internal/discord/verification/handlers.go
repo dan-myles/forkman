@@ -119,7 +119,7 @@ func (m *Verification) handleCIDVerifyEmailModal(
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Submitted",
-					Description: "We have sent a code to your email (" + recipient + "). Please check your inbox and enter the code below.",
+					Description: "We have sent a code to your email (" + recipient + "). Please check your inbox and enter the code below. The code is sent to the email address that you used to apply to ASU. You do not have access to your ASU email at this time. ",
 					Color:       0x00FF00, // Green color
 				},
 			},
