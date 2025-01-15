@@ -103,7 +103,7 @@ func (m *Verification) handleCIDVerifyEmailModal(
 
 	sender := "forkman@devil2devil.asu.edu"
 	subject := "Devil2Devil Verification"
-	body := "Verficiation Code: " + code
+	body := "Verfication Code: " + code
 
 	// Send the email
 	err = sendEmail(context.TODO(), m.emailClient, sender, recipient, subject, body)
@@ -119,7 +119,7 @@ func (m *Verification) handleCIDVerifyEmailModal(
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Submitted",
-					Description: "We have sent a code to your email (" + recipient + "). Please check your inbox and enter the code below. The code is sent to the email address that you used to apply to ASU. You do not have access to your ASU email at this time. ",
+					Description: "We have sent a code to your email (" + recipient + "). You may not have access to this email yet, this code will be forwarded to the email you used to apply to ASU.",
 					Color:       0x00FF00, // Green color
 				},
 			},
