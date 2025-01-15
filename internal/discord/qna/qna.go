@@ -306,6 +306,10 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 		return
 	}
 
+	if channel.ParentID != m.forumChannelId {
+		return
+	}
+
 	s.ChannelMessageSend(msg.ChannelID, "Hello, I will be responding to your message in a few seconds!")
 	query := channel.Name + " " + msg.Content
 
@@ -323,6 +327,11 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	response, err := m.bedrock.RetrieveAndGenerate(context.Background(), input)
+	if err != nil {
+		m.log.Error().Err(err).Msg("failed to retrieve and generate")
+		return
+	}
+
 	if response.Output != nil {
 		s.ChannelMessageSend(msg.ChannelID, *response.Output.Text)
 	}
