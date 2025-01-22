@@ -37,7 +37,7 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 
 	userId := msg.Author.ID
 	channelID := msg.ChannelID
-	content := "Hi <@" + userId + ">, I'm Forkman, you're friendly support bot. I'm looking through our knowledge base to see if I can answer your question. :wave:"
+	content := "Hi <@" + userId + ">, I'm Forkman, your friendly support bot. I'm looking through our knowledge base to see if I can answer your question. :wave:"
 
 	message, _ := s.ChannelMessageSend(msg.ChannelID, content)
 	query := channel.Name + " " + msg.Content
