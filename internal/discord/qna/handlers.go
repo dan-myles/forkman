@@ -12,6 +12,7 @@ import (
 
 var (
 	CIDAdditionalAssistanceBtn = "additional_assistance_button"
+	CIDSatisfactoryAnswerBtn   = "satisfactory_answer_button"
 	HelperRoleID               = "1213199035968528434"
 )
 
@@ -62,19 +63,27 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Description: "<@" + userId + ">, we're still improving our answers! Let us know if you still need assistance.",
+		Description: "<@" + userId + ">, we're still improving our answers! Please rate the quality of the answer below.",
 		Color:       0x00FF00, // green color
 	}
 
 	buttonRow := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{
-				Label: "I still need help!",
-				Style: discordgo.PrimaryButton,
+				Label: " It was great!",
+				Style: discordgo.SuccessButton,
 				Emoji: &discordgo.ComponentEmoji{
-					Name: "👆",
+					Name: "👍",
 				},
-				CustomID: CIDAdditionalAssistanceBtn, // Custom ID for button to trigger modal
+				CustomID: CIDSatisfactoryAnswerBtn,
+			},
+			discordgo.Button{
+				Label: " I still need help...",
+				Style: discordgo.DangerButton,
+				Emoji: &discordgo.ComponentEmoji{
+					Name: "👎",
+				},
+				CustomID: CIDAdditionalAssistanceBtn,
 			},
 		},
 	}
@@ -97,13 +106,37 @@ func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreat
 }
 
 func (m *QNA) handleCIDAdditionalAssistanceBtn(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	ping := fmt.Sprintf("<@%s> Assistance requested.", HelperRoleID)
+	ping := fmt.Sprintf("<@&%s> Assistance requested.", HelperRoleID)
 	content := i.Message.Content
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: ping,
+		},
+	})
+
+	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		Content:    &content,
+		Channel:    i.ChannelID,
+		ID:         i.Message.ID,
+		Embeds:     &[]*discordgo.MessageEmbed{},
+		Components: &[]discordgo.MessageComponent{},
+	})
+	if err != nil {
+		m.log.Error().Err(err).Msg("error editing message")
+		return
+	}
+}
+
+func (m *QNA) handleCIDSatisfactoryAnswerBtn(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	content := i.Message.Content
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Thank you for your feedback!",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 

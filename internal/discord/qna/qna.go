@@ -305,10 +305,11 @@ func (m *QNA) handleComponent(s *discordgo.Session, i *discordgo.InteractionCrea
 	switch cid {
 	case CIDAdditionalAssistanceBtn:
 		m.handleCIDAdditionalAssistanceBtn(s, i)
+	case CIDSatisfactoryAnswerBtn:
+		m.handleCIDSatisfactoryAnswerBtn(s, i)
 	default:
 		m.log.Error().
 			Str("custom_id", cid).
 			Msg("unhandled interaction")
 	}
 }
-
