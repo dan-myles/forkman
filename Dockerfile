@@ -28,14 +28,8 @@ RUN go build -o forkman ./cmd/forkman/main.go
 FROM ubuntu:22.04 AS final
 WORKDIR /app
 
-# Install dependencies required for CGO
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libc6 \
-    libstdc++6 \
-    curl \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
+# Install ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go-builder /app/forkman /app/forkman
 RUN chmod +x /app/forkman
