@@ -1,15 +1,12 @@
 package qna
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/avvo-na/forkman/internal/database"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime/types"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
@@ -271,6 +268,8 @@ func (m *QNA) OnInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
 		m.handleCommand(s, i)
+	case discordgo.InteractionMessageComponent:
+		m.handleComponent(s, i)
 	}
 }
 
@@ -291,53 +290,7 @@ func (m *QNA) OnMessageCreate(s *discordgo.Session, msg *discordgo.MessageCreate
 	m.handleQNARequest(s, msg)
 }
 
-func (m *QNA) handleQNARequest(s *discordgo.Session, msg *discordgo.MessageCreate) {
-	channel, err := m.session.Channel(msg.ChannelID)
-	if err != nil {
-		m.log.Error().Err(err).Msg("critical error getting channel")
-		return
-	}
-
-	if channel.Type != discordgo.ChannelTypeGuildPublicThread {
-		return
-	}
-
-	if channel.MessageCount != 0 {
-		return
-	}
-
-	if channel.ParentID != m.forumChannelId {
-		return
-	}
-
-	s.ChannelMessageSend(msg.ChannelID, "Hello, I will be responding to your message in a few seconds!")
-	query := channel.Name + " " + msg.Content
-
-	input := &bedrockagentruntime.RetrieveAndGenerateInput{
-		Input: &types.RetrieveAndGenerateInput{
-			Text: aws.String(query),
-		},
-		RetrieveAndGenerateConfiguration: &types.RetrieveAndGenerateConfiguration{
-			Type: types.RetrieveAndGenerateTypeKnowledgeBase,
-			KnowledgeBaseConfiguration: &types.KnowledgeBaseRetrieveAndGenerateConfiguration{
-				ModelArn:        aws.String("amazon.nova-pro-v1:0"),
-				KnowledgeBaseId: aws.String(m.knowledgeBaseId),
-			},
-		},
-	}
-
-	response, err := m.bedrock.RetrieveAndGenerate(context.Background(), input)
-	if err != nil {
-		m.log.Error().Err(err).Msg("failed to retrieve and generate")
-		return
-	}
-
-	if response.Output != nil {
-		s.ChannelMessageSend(msg.ChannelID, *response.Output.Text)
-	}
-}
-
-func (m *QNA) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (m *QNA) handleCommand(_ *discordgo.Session, i *discordgo.InteractionCreate) {
 	name := i.ApplicationCommandData().Name
 
 	switch name {
@@ -345,3 +298,17 @@ func (m *QNA) handleCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 		m.log.Info().Msg("command not found")
 	}
 }
+
+func (m *QNA) handleComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	cid := i.MessageComponentData().CustomID
+
+	switch cid {
+	case CIDAdditionalAssistanceBtn:
+		m.handleCIDAdditionalAssistanceBtn(s, i)
+	default:
+		m.log.Error().
+			Str("custom_id", cid).
+			Msg("unhandled interaction")
+	}
+}
+
