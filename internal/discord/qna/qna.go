@@ -282,6 +282,10 @@ func (m *QNA) OnMessageCreate(s *discordgo.Session, msg *discordgo.MessageCreate
 		return
 	}
 
+  if msg.GuildID == "" {
+    return
+  }
+
 	mod, err := m.repo.ReadModule(msg.GuildID)
 	if err != nil {
 		return
