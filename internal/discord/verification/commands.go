@@ -18,6 +18,18 @@ var commands = []*discordgo.ApplicationCommand{
 			},
 		},
 	},
+	{
+		Name: 	  "verify",
+		Description: "manually verify a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "to verify",
+				Required:    true,
+			},
+	},
+},
 }
 
 func (m *Verification) email(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -64,6 +76,28 @@ func (m *Verification) email(s *discordgo.Session, i *discordgo.InteractionCreat
 				},
 			},
 			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+}
+
+
+func (m *Verification) verify(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	member := i.ApplicationCommandData().Options[0].UserValue(s)
+	err := m.repo.VerifyUser(i.GuildID, member.ID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to verify user",
+			},
+		})
+		return
+	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "User verified",
 		},
 	})
 }

@@ -307,3 +307,24 @@ func (m *Verification) handleModal(s *discordgo.Session, i *discordgo.Interactio
 			Msg("unhandled interaction")
 	}
 }
+
+func (m *Verification) VerifyUser(guildSnowflake string, userSnowflake string) error {
+	// Read DB state
+	email, err := m.repo.ReadEmail(guildSnowflake, userSnowflake)
+	if err != nil {
+		return err
+	}
+
+	if email == nil {
+		return errors.New("email not found")
+	}
+
+	// Update DB state
+	email.Verified = true
+	_, err = m.repo.UpdateEmail(email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
