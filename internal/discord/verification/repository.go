@@ -1,6 +1,9 @@
 package verification
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/avvo-na/forkman/internal/database"
 	"gorm.io/gorm"
 )
@@ -112,4 +115,43 @@ func (r *Repository) UpsertEmail(email *database.Email) (*database.Email, error)
 	}
 
 	return email, nil
+}
+
+func (r *Repository) ManualVerification(guildSnowflake, userSnowflake, emailPart string) (string, error) {
+	// Ensure the email ends with "@asu.edu"
+	if !strings.HasSuffix(strings.ToLower(emailPart), "@asu.edu") {
+		emailPart += "@asu.edu"
+	}
+
+	emailRecord := &database.Email{
+		GuildSnowflake: guildSnowflake,
+		UserSnowflake:  userSnowflake,
+		Address:        emailPart,
+		Code:           "N/A",
+		IsVerified:     true,
+	}
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		existing := &database.Email{}
+		queryErr := tx.Where("guild_snowflake = ? AND user_snowflake = ?", guildSnowflake, userSnowflake).
+			First(existing).Error
+
+		// GORM v2 check for "not found"
+		if errors.Is(queryErr, gorm.ErrRecordNotFound) {
+			return tx.Create(emailRecord).Error
+		} else if queryErr != nil {
+			return queryErr
+		}
+
+		// Otherwise record found; update
+		existing.Address = emailRecord.Address
+		existing.IsVerified = emailRecord.IsVerified
+		// existing.Code = emailRecord.Code if you need it
+		return tx.Save(existing).Error
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return emailPart, nil
 }
