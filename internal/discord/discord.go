@@ -251,8 +251,10 @@ func (d *Discord) onInteractionCreate(s *discordgo.Session, i *discordgo.Interac
 		return
 	}
 
-	guild, _ := d.session.Guild(i.GuildID)
-	log = log.With().Str("guild_name", guild.Name).Logger()
+	guild, err := d.session.Guild(i.GuildID)
+  if err == nil {
+    log = log.With().Str("guild_name", guild.Name).Logger()
+  }
 
 	log.Info().Msg("interaction request received")
 }
