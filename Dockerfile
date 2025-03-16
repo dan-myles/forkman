@@ -32,6 +32,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go-builder /app/forkman /app/forkman
+RUN cat .env > /app/.env
 RUN chmod +x /app/forkman
 
 # Run the app
