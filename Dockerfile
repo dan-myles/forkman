@@ -3,7 +3,7 @@ FROM node:20-slim AS vite-builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-RUN pnpm install -g pnpm
+RUN pnpm self-update
 
 # Build the Vite bundle
 COPY ./web /app/web
