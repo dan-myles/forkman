@@ -2,7 +2,6 @@ package config
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -42,10 +41,9 @@ type ForkConfig struct {
 }
 
 func New() *ForkConfig {
-	if os.Getenv("GO_ENV") != "production" {
-		if err := godotenv.Load(); err != nil {
-			log.Println("No .env file found, relying on external env vars...")
-		}
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, relying on external env vars...")
 	}
 
 	cfg, err := env.ParseAs[ForkConfig]()
