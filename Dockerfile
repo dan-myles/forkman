@@ -3,7 +3,7 @@ FROM node:20-slim AS vite-builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-RUN pnpm self-update
+
 
 # Build the Vite bundle
 COPY ./web /app/web
@@ -11,7 +11,7 @@ WORKDIR /app/web
 RUN rm -rf node_modules
 RUN pnpm install --frozen-lockfile
 RUN pnpm self-update
-
+RUN pnpm run build
 # Build the Go app #
 FROM golang:1.23.1 AS go-builder
 COPY ./internal /app/internal
