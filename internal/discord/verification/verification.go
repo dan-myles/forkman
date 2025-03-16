@@ -277,6 +277,8 @@ func (m *Verification) handleCommand(s *discordgo.Session, i *discordgo.Interact
 	switch name {
 	case "email":
 		m.email(s, i)
+	case "verify":
+		m.verify(s, i)
 	}
 }
 
