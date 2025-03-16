@@ -20,6 +20,7 @@ COPY ./go.mod /app/go.mod
 COPY ./go.sum /app/go.sum
 COPY --from=vite-builder /app/web/dist /app/internal/server/dist
 WORKDIR /app
+COPY .env /app/.env
 RUN go mod download
 RUN go build -o forkman ./cmd/forkman/main.go
 
