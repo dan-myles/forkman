@@ -10,7 +10,7 @@ COPY ./web /app/web
 WORKDIR /app/web
 RUN rm -rf node_modules
 RUN pnpm install --frozen-lockfile
-#RUN pnpm run build
+RUN pnpm self-update
 
 # Build the Go app #
 FROM golang:1.23.1 AS go-builder
