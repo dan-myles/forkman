@@ -22,6 +22,7 @@ import (
 func main() {
 	// General deps
 	// Adding a new change
+	// Even more changes
 	valid := validator.New(validator.WithRequiredStructEnabled())
 	cfg := config.New()
 	log := logger.New(cfg.GoEnv, cfg.LogLevel)
